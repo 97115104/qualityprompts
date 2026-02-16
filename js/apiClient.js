@@ -148,14 +148,9 @@ const ApiClient = (() => {
     // --- Response parsing ---
 
     function parseResponse(content) {
-        let cleaned = content.trim();
-        // Strip markdown code fences if present
-        if (cleaned.startsWith('```')) {
-            cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
-        }
+        const parsed = tryParseJson(content);
 
-        try {
-            const parsed = JSON.parse(cleaned);
+        if (parsed && parsed.prompt_plain) {
             return {
                 prompt_plain: parsed.prompt_plain || '',
                 prompt_structured: parsed.prompt_structured || '',
@@ -163,15 +158,100 @@ const ApiClient = (() => {
                 optimization_notes: parsed.optimization_notes || '',
                 token_estimate: parsed.token_estimate || 0
             };
-        } catch {
+        }
+
+        // JSON parsing failed entirely — the response is just raw text
+        // Use it as the plain text prompt directly
+        const plainText = cleanRawResponse(content);
+        return {
+            prompt_plain: plainText,
+            prompt_structured: plainText,
+            prompt_json: { prompt: plainText },
+            optimization_notes: '',
+            token_estimate: Math.ceil(plainText.split(/\s+/).length * 1.3)
+        };
+    }
+
+    function tryParseJson(content) {
+        let text = content.trim();
+
+        // Strategy 1: Strip markdown code fences
+        text = text.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
+
+        // Strategy 2: Direct parse
+        try {
+            return JSON.parse(text);
+        } catch { /* continue */ }
+
+        // Strategy 3: Find first { ... last } in the response
+        const firstBrace = text.indexOf('{');
+        const lastBrace = text.lastIndexOf('}');
+        if (firstBrace !== -1 && lastBrace > firstBrace) {
+            try {
+                return JSON.parse(text.substring(firstBrace, lastBrace + 1));
+            } catch { /* continue */ }
+        }
+
+        // Strategy 4: Try to fix common issues — unescaped newlines in string values
+        try {
+            const fixed = text.substring(
+                firstBrace !== -1 ? firstBrace : 0,
+                lastBrace !== -1 ? lastBrace + 1 : text.length
+            );
+            // Replace actual newlines inside JSON string values with \\n
+            const repaired = fixed.replace(/(?<=:\s*"[^"]*)\n(?=[^"]*")/g, '\\n');
+            return JSON.parse(repaired);
+        } catch { /* continue */ }
+
+        // Strategy 5: Regex extraction of prompt_plain value
+        const plainMatch = content.match(/"prompt_plain"\s*:\s*"((?:[^"\\]|\\.)*)"/s);
+        if (plainMatch) {
+            const plain = plainMatch[1]
+                .replace(/\\n/g, '\n')
+                .replace(/\\"/g, '"')
+                .replace(/\\\\/g, '\\');
+
+            const structuredMatch = content.match(/"prompt_structured"\s*:\s*"((?:[^"\\]|\\.)*)"/s);
+            const structured = structuredMatch
+                ? structuredMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\')
+                : plain;
+
+            const notesMatch = content.match(/"optimization_notes"\s*:\s*"((?:[^"\\]|\\.)*)"/s);
+            const notes = notesMatch
+                ? notesMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"')
+                : '';
+
+            const tokenMatch = content.match(/"token_estimate"\s*:\s*(\d+)/);
+            const tokens = tokenMatch ? parseInt(tokenMatch[1], 10) : 0;
+
+            // Try to extract prompt_json
+            let promptJson = { prompt: plain };
+            const jsonMatch = content.match(/"prompt_json"\s*:\s*(\{[\s\S]*?\})\s*[,}]/);
+            if (jsonMatch) {
+                try { promptJson = JSON.parse(jsonMatch[1]); } catch { /* use default */ }
+            }
+
             return {
-                prompt_plain: content,
-                prompt_structured: content,
-                prompt_json: { raw: content },
-                optimization_notes: 'Response was not valid JSON — returned as raw text.',
-                token_estimate: Math.ceil(content.split(/\s+/).length * 1.3)
+                prompt_plain: plain,
+                prompt_structured: structured,
+                prompt_json: promptJson,
+                optimization_notes: notes,
+                token_estimate: tokens
             };
         }
+
+        return null;
+    }
+
+    // Clean raw response text — remove any JSON artifacts
+    function cleanRawResponse(content) {
+        return content
+            .replace(/^```(?:json)?\s*\n?/, '')
+            .replace(/\n?```\s*$/, '')
+            .replace(/\\n/g, '\n')
+            .replace(/\\"/g, '"')
+            .replace(/\\\\/g, '\\')
+            .trim();
     }
 
     return { generatePrompt };
