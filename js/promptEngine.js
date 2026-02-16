@@ -174,10 +174,15 @@ const PromptEngine = (() => {
         const systemMessage = `You are an expert prompt engineer. Your task is to transform a simple idea into a high-quality, production-ready prompt.
 
 You must return a valid JSON object with exactly these keys:
-- "prompt_plain": A complete, copy-paste-ready prompt as a single string. This should be the full prompt a user would paste into a chat interface.
-- "prompt_structured": The same prompt but formatted with clear markdown sections (## headings, bullet points, numbered steps). Make it scannable and well-organized.
+
+- "prompt_plain": A complete, copy-paste-ready prompt written as natural plain text. NO markdown syntax, NO hashtags, NO bullet symbols (*, -), NO bold/italic markers (**, __), NO code fences. Use regular paragraphs, numbered lists with "1." format, and line breaks for separation. This should read like a clean document someone would paste into any chat interface.
+
+- "prompt_structured": The same prompt but formatted with clear markdown sections (## headings, **bold**, bullet points, numbered steps, code fences where appropriate). Make it scannable and well-organized for display in a markdown renderer.
+
 - "prompt_json": A JSON object with keys like "system", "user", "constraints", "output_format", "evaluation_criteria" that could be used programmatically by an agent or API.
+
 - "optimization_notes": A brief explanation of what optimizations were applied and why.
+
 - "token_estimate": An integer estimating the token count of the plain prompt.
 
 Return ONLY the JSON object. No markdown fences, no explanation outside the JSON.`;

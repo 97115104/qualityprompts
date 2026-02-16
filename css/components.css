@@ -85,6 +85,44 @@
     display: block;
 }
 
+/* Plain text output — readable paragraphs */
+.plain-text-output {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 24px 28px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.75;
+    color: #333;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.plain-text-output p {
+    margin: 0 0 14px 0;
+}
+
+.plain-text-output p:last-child {
+    margin-bottom: 0;
+}
+
+.plain-text-output ol,
+.plain-text-output ul {
+    margin: 0 0 14px 0;
+    padding-left: 24px;
+}
+
+.plain-text-output li {
+    margin-bottom: 6px;
+}
+
+.plain-text-output ol:last-child,
+.plain-text-output ul:last-child {
+    margin-bottom: 0;
+}
+
+/* Code blocks — dark theme for structured + JSON */
 .tab-panel pre {
     background: #1e1e1e;
     color: #d4d4d4;
@@ -164,6 +202,23 @@
     border-radius: 12px;
     font-size: 12px;
     margin-top: 8px;
+}
+
+/* JSON syntax highlighting */
+.json-key {
+    color: #9cdcfe;
+}
+
+.json-string {
+    color: #ce9178;
+}
+
+.json-number {
+    color: #b5cea8;
+}
+
+.json-keyword {
+    color: #569cd6;
 }
 
 /* Section divider */

@@ -27,17 +27,22 @@ const UIRenderer = (() => {
         const section = document.getElementById('output-section');
         section.classList.remove('hidden');
 
-        // Plain prompt
-        document.getElementById('plain-content').textContent = result.prompt_plain;
+        // Plain text — render as readable paragraphs (HTML)
+        const plainText = stripMarkdown(result.prompt_plain);
+        document.getElementById('plain-content').innerHTML = textToParagraphs(plainText);
+        // Store raw text for copy/download
+        document.getElementById('plain-content').dataset.rawText = plainText;
 
-        // Structured prompt
+        // Structured prompt (markdown preserved)
         document.getElementById('structured-content').textContent = result.prompt_structured;
 
-        // JSON prompt
-        const jsonStr = typeof result.prompt_json === 'string'
-            ? result.prompt_json
-            : JSON.stringify(result.prompt_json, null, 2);
-        document.getElementById('json-content').textContent = jsonStr;
+        // JSON prompt — syntax highlighted
+        const jsonObj = typeof result.prompt_json === 'string'
+            ? JSON.parse(result.prompt_json)
+            : result.prompt_json;
+        const jsonStr = JSON.stringify(jsonObj, null, 2);
+        document.getElementById('json-content').innerHTML = highlightJson(jsonStr);
+        document.getElementById('json-content').dataset.rawText = jsonStr;
 
         // Optimization notes
         const notesEl = document.getElementById('optimization-notes');
@@ -59,6 +64,56 @@ const UIRenderer = (() => {
 
         // Activate first tab
         activateTab('plain');
+    }
+
+    // Convert plain text into HTML paragraphs for readable display
+    function textToParagraphs(text) {
+        if (!text) return '';
+        // Split on double newlines into paragraph blocks
+        const blocks = text.split(/\n{2,}/);
+        return blocks.map(block => {
+            const trimmed = block.trim();
+            if (!trimmed) return '';
+            // Check if block is a numbered/bulleted list
+            const lines = trimmed.split('\n');
+            const isList = lines.every(l => /^\s*(\d+[.)]\s|-\s)/.test(l));
+            if (isList) {
+                const isOrdered = lines.every(l => /^\s*\d+[.)]\s/.test(l));
+                const tag = isOrdered ? 'ol' : 'ul';
+                const items = lines.map(l => {
+                    const content = l.replace(/^\s*(\d+[.)]\s|-\s)/, '');
+                    return `<li>${escapeHtml(content)}</li>`;
+                }).join('');
+                return `<${tag}>${items}</${tag}>`;
+            }
+            // Regular paragraph — preserve single line breaks as <br>
+            const html = lines.map(l => escapeHtml(l)).join('<br>');
+            return `<p>${html}</p>`;
+        }).join('');
+    }
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    // Syntax highlight JSON string
+    function highlightJson(json) {
+        const escaped = escapeHtml(json);
+        return escaped
+            // Keys — strings followed by a colon
+            .replace(/"([^"\\]*(\\.[^"\\]*)*)"(\s*:)/g,
+                '<span class="json-key">"$1"</span>$3')
+            // Remaining strings (values)
+            .replace(/"([^"\\]*(\\.[^"\\]*)*)"/g,
+                '<span class="json-string">"$1"</span>')
+            // Numbers
+            .replace(/\b(-?\d+\.?\d*)\b/g,
+                '<span class="json-number">$1</span>')
+            // Booleans and null
+            .replace(/\b(true|false|null)\b/g,
+                '<span class="json-keyword">$1</span>');
     }
 
     function setupTabs() {
@@ -83,22 +138,17 @@ const UIRenderer = (() => {
             btn.addEventListener('click', () => {
                 const target = btn.dataset.target;
                 const el = document.getElementById(target);
-                copyToClipboard(el.textContent, btn);
+                // Use raw text if stored, otherwise fall back to textContent
+                const text = el.dataset.rawText || el.textContent;
+                copyToClipboard(text, btn);
             });
         });
     }
 
     function copyToClipboard(text, btn) {
         navigator.clipboard.writeText(text).then(() => {
-            const original = btn.textContent;
-            btn.textContent = 'Copied!';
-            btn.classList.add('copied');
-            setTimeout(() => {
-                btn.textContent = original;
-                btn.classList.remove('copied');
-            }, 1500);
+            flashButton(btn);
         }).catch(() => {
-            // Fallback
             const textarea = document.createElement('textarea');
             textarea.value = text;
             textarea.style.position = 'fixed';
@@ -107,14 +157,18 @@ const UIRenderer = (() => {
             textarea.select();
             document.execCommand('copy');
             document.body.removeChild(textarea);
-            const original = btn.textContent;
-            btn.textContent = 'Copied!';
-            btn.classList.add('copied');
-            setTimeout(() => {
-                btn.textContent = original;
-                btn.classList.remove('copied');
-            }, 1500);
+            flashButton(btn);
         });
+    }
+
+    function flashButton(btn) {
+        const original = btn.textContent;
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+            btn.textContent = original;
+            btn.classList.remove('copied');
+        }, 1500);
     }
 
     function setupDownloadButtons() {
@@ -123,7 +177,7 @@ const UIRenderer = (() => {
                 const target = btn.dataset.target;
                 const format = btn.dataset.format;
                 const el = document.getElementById(target);
-                const content = el.textContent;
+                const content = el.dataset.rawText || el.textContent;
                 const ext = format === 'json' ? 'json' : 'txt';
                 downloadFile(content, `quality-prompt.${ext}`);
             });
@@ -140,6 +194,21 @@ const UIRenderer = (() => {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+    }
+
+    function stripMarkdown(text) {
+        if (!text) return '';
+        return text
+            .replace(/```[\s\S]*?```/g, (m) => m.replace(/```\w*\n?/g, '').replace(/```/g, ''))
+            .replace(/^#{1,6}\s+/gm, '')
+            .replace(/\*\*(.+?)\*\*/g, '$1')
+            .replace(/__(.+?)__/g, '$1')
+            .replace(/\*(.+?)\*/g, '$1')
+            .replace(/_(.+?)_/g, '$1')
+            .replace(/^\s*[-*+]\s+/gm, '- ')
+            .replace(/`(.+?)`/g, '$1')
+            .replace(/\n{3,}/g, '\n\n')
+            .trim();
     }
 
     return {
