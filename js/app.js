@@ -16,6 +16,19 @@ document.addEventListener('DOMContentLoaded', () => {
     UIRenderer.setupCopyButtons();
     UIRenderer.setupDownloadButtons();
 
+    // How to use modal
+    document.getElementById('btn-info').addEventListener('click', () => {
+        document.getElementById('info-modal').classList.remove('hidden');
+    });
+    document.getElementById('btn-close-info').addEventListener('click', () => {
+        document.getElementById('info-modal').classList.add('hidden');
+    });
+    document.getElementById('info-modal').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) {
+            document.getElementById('info-modal').classList.add('hidden');
+        }
+    });
+
     // Settings toggle
     document.getElementById('settings-toggle').addEventListener('click', () => {
         const panel = document.getElementById('settings-panel');
@@ -41,11 +54,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Character counter
+    const ideaInput = document.getElementById('idea-input');
+    const charCount = document.getElementById('char-count');
+    const charCounter = document.querySelector('.char-counter');
+    const charLimitHint = document.getElementById('char-limit-hint');
+    ideaInput.addEventListener('input', () => {
+        const len = ideaInput.value.length;
+        charCount.textContent = len.toLocaleString();
+        charCounter.classList.toggle('near-limit', len >= 1200 && len < 1500);
+        charCounter.classList.toggle('at-limit', len >= 1500);
+        charLimitHint.classList.toggle('hidden', len < 1500);
+    });
+
     // Generate button
     document.getElementById('generate-btn').addEventListener('click', handleGenerate);
 
     // Allow Ctrl/Cmd+Enter to generate
-    document.getElementById('idea-input').addEventListener('keydown', (e) => {
+    ideaInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
             handleGenerate();
         }

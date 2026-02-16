@@ -12,6 +12,33 @@
 <body>
     <h1>Quality Prompts</h1>
     <p class="subtitle">Transform simple ideas into production-ready prompts</p>
+    <div class="how-to-use-row">
+        <button id="btn-info" class="btn-how-to-use">How to use</button>
+    </div>
+
+    <!-- Info Modal -->
+    <div id="info-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>About Quality Prompts</h3>
+                <button id="btn-close-info" class="btn-modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Quality Prompts</strong> is a free, serverless tool that transforms simple ideas into high-quality, production-ready prompts. You provide a short description of what you want, and the tool builds a detailed, structured prompt for you. It adds objectives, constraints, deliverables, evaluation criteria, and edge case handling automatically.</p>
+
+                <h4>How it works</h4>
+                <p>Start by selecting a subject type such as Development, Writing, Marketing, or Research. Then choose a target model class to optimize the prompt length and complexity for the model you plan to use. Type a short idea into the text field. A sentence or two is ideal. Click Generate Prompt and the tool will return your optimized prompt in three formats: Plain Text for copy-pasting into any chat interface, Structured with markdown headings and sections, and JSON for agents, APIs, or programmatic use.</p>
+
+                <h4>Tips for best results</h4>
+                <p>Keep your idea brief. The whole point of this tool is to do the heavy lifting for you, so you do not need to write a full prompt yourself. Focus on what you want accomplished, not on how to prompt for it. The more specific your idea is, the better the output will be. For example, "build a dashboard that tracks user retention by cohort" will produce a much better prompt than just "build a dashboard."</p>
+
+                <h4>Output formats</h4>
+                <p>The Plain Text tab gives you a clean, readable prompt you can paste directly into any chat interface. The Structured tab formats the same prompt with markdown headings, sections, and bullet points for easy scanning. The JSON tab provides a programmatic format with separate fields for system instructions, user prompts, constraints, and evaluation criteria, which is useful for agents and API integrations.</p>
+
+                <p>All processing happens through the selected API provider. No data is stored on any server.</p>
+            </div>
+        </div>
+    </div>
 
     <div id="file-protocol-warning" class="warning-banner hidden">
         <strong>Local file detected.</strong> The Puter API requires a web server. Run this from your project folder:
@@ -80,7 +107,9 @@
 
         <div class="form-group">
             <label for="idea-input">Your Idea</label>
-            <textarea id="idea-input" placeholder="Describe your idea, task, or concept... (e.g., &quot;Help me design a blockchain onboarding flow&quot;)" rows="3"></textarea>
+            <textarea id="idea-input" maxlength="1500" placeholder="Keep it short, a sentence or two is ideal. The tool builds the full prompt for you." rows="3"></textarea>
+            <div class="char-counter"><span id="char-count">0</span> / 1,500 characters</div>
+            <div id="char-limit-hint" class="char-limit-hint hidden">You're at the limit. Remember, the point of this tool is to build the detailed prompt for you — just describe your idea briefly and let Quality Prompts do the rest.</div>
         </div>
 
         <button id="generate-btn" class="btn-primary">Generate Prompt</button>
@@ -144,20 +173,25 @@
     </div>
 
     <footer class="license-section">
-        <div class="license-badge">
-            MIT License
-            <div class="license-tooltip">
-                MIT License<br><br>
-                Copyright (c) 2025 Austin Harshberger<br><br>
-                Permission is hereby granted, free of charge, to any person obtaining a copy
-                of this software and associated documentation files (the "Software"), to deal
-                in the Software without restriction, including without limitation the rights
-                to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-                copies of the Software, and to permit persons to whom the Software is
-                furnished to do so, subject to the following conditions:<br><br>
-                The above copyright notice and this permission notice shall be included in all
-                copies or substantial portions of the Software.
+        <div class="footer-links">
+            <div class="license-badge">
+                MIT License
+                <div class="license-tooltip">
+                    MIT License<br><br>
+                    Copyright (c) 2026 Austin Harshberger<br><br>
+                    Permission is hereby granted, free of charge, to any person obtaining a copy
+                    of this software and associated documentation files (the "Software"), to deal
+                    in the Software without restriction, including without limitation the rights
+                    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+                    copies of the Software, and to permit persons to whom the Software is
+                    furnished to do so, subject to the following conditions:<br><br>
+                    The above copyright notice and this permission notice shall be included in all
+                    copies or substantial portions of the Software.
+                </div>
             </div>
+            <a href="https://attest.ink/verify/?data=eyJ2ZXJzaW9uIjoiMi4wIiwiaWQiOiIyMDI2LTAyLTE1LXF1YWxpdHlwcm9tcHRzIiwiY29udGVudF9uYW1lIjoiUXVhbGl0eSBQcm9tcHRzIiwidGltZXN0YW1wIjoiMjAyNi0wMi0xNVQwMDowMDowMC4wMDBaIiwicGxhdGZvcm0iOiJhdHRlc3QuaW5rIiwibW9kZWwiOiJjbGF1ZGUtb3B1cy00LTYiLCJyb2xlIjoiZ2VuZXJhdGVkIiwiZG9jdW1lbnRfdHlwZSI6ImNvZGUiLCJhdXRob3IiOiI5NyAxMTUgMTA0In0=" class="attest-badge" target="_blank" rel="noopener noreferrer">
+                built with ai
+            </a>
         </div>
         <div class="author-info">
             Created by Austin Harshberger

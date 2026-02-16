@@ -25,7 +25,107 @@ h1 {
     text-align: center;
     color: #777;
     font-size: 14px;
-    margin-bottom: 24px;
+    margin-bottom: 8px;
+}
+
+/* How to use button */
+.how-to-use-row {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.btn-how-to-use {
+    background: transparent;
+    color: #888;
+    border: none;
+    font-size: 12px;
+    padding: 2px 8px;
+    cursor: pointer;
+    text-decoration: underline;
+    transition: color 0.2s;
+}
+
+.btn-how-to-use:hover {
+    color: #999;
+    background: transparent;
+}
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+}
+
+.modal {
+    background: #fff;
+    border-radius: 8px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.btn-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #999;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+}
+
+.btn-modal-close:hover {
+    color: #333;
+}
+
+.modal-body {
+    padding: 20px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #444;
+}
+
+.modal-body p {
+    margin-bottom: 12px;
+}
+
+.modal-body h4 {
+    margin: 16px 0 8px;
+    color: #333;
+}
+
+.modal-body ul,
+.modal-body ol {
+    padding-left: 24px;
+    margin-bottom: 12px;
+}
+
+.modal-body li {
+    margin-bottom: 6px;
 }
 
 .container {
@@ -62,7 +162,7 @@ input[type="password"]:focus,
 textarea:focus,
 select:focus {
     outline: none;
-    border-color: #4CAF50;
+    border-color: #999;
 }
 
 textarea {
@@ -141,7 +241,7 @@ textarea {
 .settings-toggle {
     background: none;
     border: none;
-    color: #4CAF50;
+    color: #666;
     cursor: pointer;
     font-size: 14px;
     padding: 0;
@@ -152,7 +252,7 @@ textarea {
 }
 
 .settings-toggle:hover {
-    color: #3e8e41;
+    color: #333;
 }
 
 .settings-panel {
@@ -173,6 +273,33 @@ textarea {
     line-height: 1.4;
 }
 
+.char-counter {
+    text-align: right;
+    font-size: 12px;
+    color: #999;
+    margin-top: 4px;
+}
+
+.char-counter.near-limit {
+    color: #e65100;
+}
+
+.char-counter.at-limit {
+    color: #d32f2f;
+    font-weight: bold;
+}
+
+.char-limit-hint {
+    background: #fff3e0;
+    border: 1px solid #ffcc80;
+    border-radius: 4px;
+    padding: 10px 14px;
+    margin-top: 8px;
+    font-size: 13px;
+    color: #e65100;
+    line-height: 1.5;
+}
+
 /* Footer */
 .license-section {
     margin-top: 30px;
@@ -183,9 +310,17 @@ textarea {
     text-align: center;
 }
 
+.footer-links {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
 .license-badge {
     display: inline-block;
-    background: #555;
+    background: #999;
     color: white;
     padding: 5px 10px;
     border-radius: 4px;
@@ -221,6 +356,21 @@ textarea {
 .license-badge:hover .license-tooltip {
     visibility: visible;
     opacity: 1;
+}
+
+.attest-badge {
+    display: inline-block;
+    background: #999;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+
+.attest-badge:hover {
+    background: #444;
 }
 
 .author-info {
