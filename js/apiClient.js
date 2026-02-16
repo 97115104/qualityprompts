@@ -24,24 +24,40 @@ const ApiClient = (() => {
             throw new Error('Puter SDK not loaded. Make sure the page includes the Puter script tag.');
         }
 
+        let response;
         try {
-            const response = await puter.ai.chat(
+            response = await puter.ai.chat(
                 [
                     { role: 'system', content: systemMessage },
                     { role: 'user', content: userMessage }
                 ],
                 { model }
             );
-
-            const content = response?.message?.content;
-            if (!content) {
-                throw new Error('No content returned from Puter API.');
-            }
-            return parseResponse(content);
         } catch (err) {
-            if (err.message?.includes('No content')) throw err;
-            throw new Error(`Puter API error: ${err.message || err}`);
+            const msg = err?.message || err?.toString?.() || JSON.stringify(err);
+            // Surface the real error details
+            if (msg.includes('content_filter') || msg.includes('moderation') || msg.includes('flagged')) {
+                throw new Error(
+                    'Content was flagged by the model\'s safety filter. ' +
+                    'Try rephrasing sensitive content or using a different model.'
+                );
+            }
+            if (msg.includes('context_length') || msg.includes('too long') || msg.includes('token')) {
+                throw new Error(
+                    'Prompt is too long for this model. Try shortening your idea or switching to gpt-oss-120b.'
+                );
+            }
+            throw new Error(`Puter API error: ${msg}`);
         }
+
+        const content = response?.message?.content;
+        if (!content) {
+            throw new Error(
+                'No content returned from Puter API. The model may have refused the request. ' +
+                'Full response: ' + JSON.stringify(response).substring(0, 300)
+            );
+        }
+        return parseResponse(content);
     }
 
     // --- OpenAI Chat Completions ---
