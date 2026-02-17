@@ -8,6 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
     populateSubjectTypes();
     populateModelTypes();
 
+    // Subject type change — show/hide sub-type dropdown
+    document.getElementById('subject-type').addEventListener('change', updateSubTypeDropdown);
+    updateSubTypeDropdown();
+
     // Restore saved settings
     restoreSettings();
 
@@ -102,6 +106,28 @@ function populateSubjectTypes() {
     });
 }
 
+function updateSubTypeDropdown() {
+    const subjectType = document.getElementById('subject-type').value;
+    const subTypes = PromptEngine.getSubTypes(subjectType);
+    const group = document.getElementById('sub-type-group');
+    const select = document.getElementById('sub-type');
+
+    // Clear existing options (keep the "General" default)
+    select.innerHTML = '<option value="">General</option>';
+
+    if (subTypes.length > 0) {
+        subTypes.forEach(({ value, label }) => {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = label;
+            select.appendChild(option);
+        });
+        group.style.display = '';
+    } else {
+        group.style.display = 'none';
+    }
+}
+
 function populateModelTypes() {
     const select = document.getElementById('model-type');
     PromptEngine.getModelTypes().forEach(({ value, label }) => {
@@ -159,6 +185,7 @@ function saveSettings() {
 async function handleGenerate() {
     const apiMode = document.getElementById('api-mode').value;
     const subjectType = document.getElementById('subject-type').value;
+    const subType = document.getElementById('sub-type').value || null;
     const idea = document.getElementById('idea-input').value.trim();
     const modelType = document.getElementById('model-type').value;
 
@@ -184,7 +211,7 @@ async function handleGenerate() {
     saveSettings();
 
     // Build meta-prompt
-    const { system, user } = PromptEngine.buildMetaPrompt(subjectType, idea, modelType);
+    const { system, user } = PromptEngine.buildMetaPrompt(subjectType, idea, modelType, subType);
 
     // Show loading
     UIRenderer.showLoading();
