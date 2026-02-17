@@ -489,7 +489,12 @@ OLLAMA_ORIGINS=* ollama serve</pre>
     <!-- Clipboard toast modal -->
     <div id="clipboard-modal" class="clipboard-modal hidden">
         <div class="clipboard-modal-content">
+            <button id="clipboard-modal-close" class="btn-modal-close">&times;</button>
             <p id="clipboard-modal-text"></p>
+            <div class="clipboard-modal-actions">
+                <button id="clipboard-modal-confirm" class="btn-primary">Open now</button>
+                <button id="clipboard-modal-cancel" class="btn-small">Cancel</button>
+            </div>
         </div>
     </div>
 

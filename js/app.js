@@ -270,25 +270,57 @@ function setupOpenInButtons() {
             if (config.direct) {
                 window.open(config.url, '_blank', 'noopener,noreferrer');
             } else {
-                // Copy prompt to clipboard, show toast, then open the service
+                // Copy prompt to clipboard, show modal, wait for user to confirm
                 navigator.clipboard.writeText(prompt).then(() => {
-                    showClipboardModal('Opening ' + config.label + ' — prompt copied to clipboard. Just paste it when the page opens.');
-                    setTimeout(() => {
-                        window.open(config.url, '_blank', 'noopener,noreferrer');
-                    }, 600);
+                    showClipboardModal(
+                        'Prompt copied to clipboard. When ' + config.label + ' opens, just paste it into the message box.',
+                        config.label,
+                        () => {
+                            window.open(config.url, '_blank', 'noopener,noreferrer');
+                        }
+                    );
                 });
             }
         });
     });
 }
 
-function showClipboardModal(message) {
+function showClipboardModal(message, label, onConfirm) {
     const modal = document.getElementById('clipboard-modal');
+    const confirmBtn = document.getElementById('clipboard-modal-confirm');
+    const cancelBtn = document.getElementById('clipboard-modal-cancel');
+    const closeBtn = document.getElementById('clipboard-modal-close');
+
     document.getElementById('clipboard-modal-text').textContent = message;
     modal.classList.remove('hidden');
-    setTimeout(() => {
+
+    // Set button text to "Open Claude" etc.
+    confirmBtn.textContent = 'Open ' + label;
+
+    function dismiss() {
         modal.classList.add('hidden');
-    }, 3500);
+    }
+
+    // Replace listeners to avoid stacking
+    const newConfirm = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
+    newConfirm.addEventListener('click', () => {
+        dismiss();
+        if (onConfirm) onConfirm();
+    });
+
+    const newCancel = cancelBtn.cloneNode(true);
+    cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+    newCancel.addEventListener('click', dismiss);
+
+    const newClose = closeBtn.cloneNode(true);
+    closeBtn.parentNode.replaceChild(newClose, closeBtn);
+    newClose.addEventListener('click', dismiss);
+
+    // Click outside to dismiss
+    modal.onclick = (e) => {
+        if (e.target === modal) dismiss();
+    };
 }
 
 // --- Provider Configuration ---
