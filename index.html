@@ -29,6 +29,13 @@
                 <h4>How it works</h4>
                 <p>Start by selecting a subject type such as Development, Writing, Marketing, or Research. Then choose a target model class to optimize the prompt length and complexity for the model you plan to use. Type a short idea into the text field. A sentence or two is ideal. Click Generate Prompt and the tool will return your optimized prompt in three formats: Plain Text for copy-pasting into any chat interface, Structured with markdown headings and sections, and JSON for agents, APIs, or programmatic use.</p>
 
+                <h4>Development prompt styles</h4>
+                <p>When you select Development as the subject type, a Prompt Style dropdown appears with three options based on how developers actually use prompts in practice:</p>
+                <p><strong>Specification Prompt</strong> is for starting something new where the model has no prior context. The generated prompt will be detailed and explicit, covering language, framework, file structure, naming conventions, dependency policy, and all constraints upfront. Use this when beginning a new project or feature from scratch.</p>
+                <p><strong>Iteration Prompt</strong> is for changing or improving existing code. The generated prompt will be short and surgical, pointing to exact files, functions, and lines. It avoids restating the full specification because the model already has project context. Use this when you need a targeted change, not a rewrite.</p>
+                <p><strong>Diagnostic Prompt</strong> is for debugging when something is broken and you do not know why. The generated prompt structures the problem with placeholders for error messages, the function that produced the error, the input that triggered it, and expected versus actual behavior. Use this when you need to find a root cause, not just apply a fix.</p>
+                <p>You can also select General to use the default development dimensions without a specific prompt style.</p>
+
                 <h4>Tips for best results</h4>
                 <p>Keep your idea brief. The whole point of this tool is to do the heavy lifting for you, so you do not need to write a full prompt yourself. Focus on what you want accomplished, not on how to prompt for it. The more specific your idea is, the better the output will be. For example, "build a dashboard that tracks user retention by cohort" will produce a much better prompt than just "build a dashboard."</p>
 
