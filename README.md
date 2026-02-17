@@ -5,7 +5,8 @@ Transform simple ideas into high-quality, production-ready prompts optimized for
 ## Features
 
 - **Subject-specific optimization** — Tailored prompt scaffolds for Development, Writing, Strategy, Product, Design, Marketing, Research, and Data Analysis
-- **Development prompt styles** — Specification, Iteration, and Diagnostic sub-types that match how developers actually use prompts during development workflows
+- **Prompt styles for every category** — Each subject type has specialized sub-types that adapt the prompt for specific workflows (PRDs, diagnostic debugging, photo editing, campaign planning, and more)
+- **Subject-type instructions (STI)** — Each subject type carries a domain-specific system role that tunes the prompt engineer persona for the subject at hand, producing higher-quality output than a generic role
 - **Model-aware generation** — Adjusts verbosity, reasoning depth, and constraints for Frontier, LLM, SLM, Paid/Premium, and Open-source models
 - **Multiple output formats** — Plain text, structured markdown, and JSON for agent/API ingestion
 - **Fully serverless** — Runs entirely in the browser with no backend required
@@ -14,25 +15,96 @@ Transform simple ideas into high-quality, production-ready prompts optimized for
 ## How It Works
 
 1. Select an API provider (Puter GPT-OSS is free and requires no key)
-2. Select a subject type and target model class
-3. If you selected Development, optionally choose a prompt style (Specification, Iteration, or Diagnostic)
+2. Select a subject type and optionally a prompt style
+3. Select a target model class
 4. Type a simple idea or concept
 5. Click **Generate Prompt**
 6. Get back an optimized prompt in three formats
 
-The tool sends your idea to a language model along with subject-specific scaffolds, prompt style context, and model-specific constraints. The model returns a structured, production-ready prompt with evaluation criteria, deliverables, and edge case handling.
+The tool sends your idea to a language model along with subject-specific scaffolds, a domain-tuned system role, prompt style context, and model-specific constraints. The model returns a structured, production-ready prompt with evaluation criteria, deliverables, and edge case handling.
 
-## Development Prompt Styles
+## Prompt Styles by Subject Type
 
-When Development is selected as the subject type, a Prompt Style dropdown appears with three options:
+Every subject type has specialized prompt styles that adapt the generated prompt for a specific workflow. Selecting **General** uses the default dimensions for that category.
 
-**Specification Prompt** — For starting something new where the model has no prior context. Generates a detailed, explicit prompt covering programming language, framework, file structure, naming conventions, dependency policy, deployment target, and all constraints. Use this when beginning a new project or feature from scratch. The cost of being explicit upfront is far lower than the cost of debugging implicit assumptions.
+### Development
 
-**Iteration Prompt** — For changing or improving existing code where the model already has context. Generates a short, surgical prompt that points to exact files, functions, and lines. It describes what is wrong and what a better result looks like without restating the full specification. Restating everything wastes tokens and can confuse the model.
+| Style | Use When |
+|-------|----------|
+| Specification Prompt | Starting a new project or feature from scratch with no prior context. Produces detailed prompts covering language, framework, file structure, naming conventions, dependency policy, and all constraints. |
+| Iteration Prompt | Making a targeted change to existing code. Produces short, surgical prompts that point to exact files and functions without restating the full specification. |
+| Diagnostic Prompt | Debugging an unknown failure. Produces prompts that structure the problem with error messages, triggering inputs, and expected versus actual behavior. |
 
-**Diagnostic Prompt** — For debugging when something is broken and the cause is unknown. Generates a prompt that structures the problem with placeholders for error messages, the function that produced the error, the input that triggered it, and expected versus actual behavior. The most common mistake with diagnostic prompts is including too little context.
+### Writing
 
-Selecting **General** uses the default development dimensions without a specific prompt style.
+| Style | Use When |
+|-------|----------|
+| Creative Writing (Long-Form) | Writing essays, blog posts, articles, fiction, or longform nonfiction. Establishes voice, structure, pacing, and thematic depth. |
+| Short-Form Copy | Writing ads, taglines, social posts, product descriptions, or UI microcopy. Optimizes for clarity, impact, and brevity with multiple variants. |
+| Marketing Communications | Writing emails, newsletters, press releases, or announcements. Structures output around audience, channel, and conversion goal. |
+
+### Strategy
+
+| Style | Use When |
+|-------|----------|
+| Business Strategy | Competitive positioning, growth planning, or market entry. Produces structured strategic analysis with prioritized recommendations. |
+| Go-to-Market Strategy | Product launches, pricing strategy, or channel selection. Produces phased GTM plans with budget allocation and measurable milestones. |
+| Technical Strategy | Architecture decisions, technology selection, or migration planning. Produces trade-off analysis with evaluation matrices and defensible recommendations. |
+
+### Product
+
+| Style | Use When |
+|-------|----------|
+| Product Requirements Document | Writing a full PRD with problem statement, personas, requirements, acceptance criteria, and out-of-scope boundaries. |
+| User Stories | Writing sprint-ready user stories in standard format with Given/When/Then acceptance criteria and edge cases. |
+| Feature Specification | Specifying a single feature in detail including all states (empty, loading, error, success), business rules, and API contracts. |
+
+### Design
+
+| Style | Use When |
+|-------|----------|
+| UI/UX Design | Wireframes, interaction flows, and component specifications with responsive behavior and accessibility requirements. |
+| Design Assets | Logos, icons, illustrations, and visual elements. Produces precise visual descriptions for image generation models or creative briefs. |
+| Photo Editing | Image modification, retouching, compositing, or style transfer. Separates what to change from what to preserve. |
+
+### Marketing
+
+| Style | Use When |
+|-------|----------|
+| Campaign Planning | Multi-channel campaigns with timelines, creative briefs, budget allocation, and performance targets. |
+| Content Strategy | Editorial calendars, content pillars, SEO plans, and distribution strategy tied to business goals. |
+| Social Media | Platform-specific strategies accounting for platform conventions, posting cadence, and algorithm behavior. |
+
+### Research
+
+| Style | Use When |
+|-------|----------|
+| Literature Review | Systematic source synthesis, gap analysis, and annotated bibliographies with inclusion/exclusion criteria. |
+| User Research | Interview guides, survey design, usability studies, and persona development with bias mitigation. |
+| Market Research | Competitive analysis, market sizing (TAM/SAM/SOM), and industry trend analysis with source attribution. |
+
+### Data Analysis
+
+| Style | Use When |
+|-------|----------|
+| Exploratory Analysis | Initial data profiling, pattern discovery, and hypothesis generation with systematic exploration plans. |
+| Dashboard & Reporting | KPI dashboards with precise metric definitions, visualization choices, and interactivity specifications. |
+| Statistical Modeling | Regression, classification, hypothesis testing, and model validation with assumption checking and reproducibility. |
+
+## Subject-Type Instructions (STI)
+
+Each subject type carries a `systemRole` field that tunes the system message for the domain at hand. Instead of a generic "You are an expert prompt engineer" role, the system message adapts:
+
+- **Development** — "specializing in software development workflows"
+- **Writing** — "specializing in written content across creative, commercial, and communications contexts"
+- **Strategy** — "specializing in business strategy, planning, and decision-making frameworks"
+- **Product** — "specializing in product management, requirements definition, and product development workflows"
+- **Design** — "specializing in design workflows including UI/UX, visual design, and image generation"
+- **Marketing** — "specializing in marketing strategy, campaign planning, and audience engagement"
+- **Research** — "specializing in research methodology, analysis, and evidence-based inquiry"
+- **Data Analysis** — "specializing in data analysis, statistical methods, and data visualization"
+
+When a prompt style (sub-type) is selected, the system message also receives a `systemContext` block that further narrows the model's focus. For example, selecting "Diagnostic Prompt" under Development adds context about structuring debugging problems, while selecting "Photo Editing" under Design adds context about separating modifications from preservation. This two-layer approach (subject role + sub-type context) produces significantly better prompts than a one-size-fits-all system message.
 
 ## Agentic API Usage
 
@@ -46,7 +118,18 @@ Select one value from each category:
 
 **Model types:** `frontier`, `llm`, `slm`, `paid`, `open-source`
 
-**Sub-types (development only, optional):** `specification`, `iteration`, `diagnostic`
+**Sub-types (optional, per subject):**
+
+| Subject | Available Sub-Types |
+|---------|-------------------|
+| `development` | `specification`, `iteration`, `diagnostic` |
+| `writing` | `long-form`, `short-form`, `marketing-comms` |
+| `strategy` | `business`, `go-to-market`, `technical` |
+| `product` | `prd`, `user-story`, `feature-spec` |
+| `design` | `ui-ux`, `design-assets`, `photo-editing` |
+| `marketing` | `campaign`, `content`, `social-media` |
+| `research` | `literature-review`, `user-research`, `market-research` |
+| `data-analysis` | `exploratory`, `dashboard`, `statistical` |
 
 ### Step 2: Build the Messages
 
@@ -58,7 +141,7 @@ The system message and user message are constructed from scaffolds defined in `j
 #### System Message Template
 
 ```
-You are an expert prompt engineer specializing in software development workflows. Your task is to transform a simple idea into a high-quality, production-ready prompt that will produce correct, useful output on the first or second pass.
+{systemRole from subject type} Your task is to transform a simple idea into a high-quality, production-ready prompt that will produce correct, useful output on the first or second pass.
 
 {If a sub-type is selected, insert: "Context for this prompt type: {systemContext from the sub-type}"}
 
@@ -115,7 +198,7 @@ Transform this idea into a high-quality prompt:
 7. Include failure handling instructions where appropriate
 8. Add step-by-step reasoning directives if the model class supports it
 9. Separate what the model should do from what it should NOT do
-10. Ensure the prompt is self-contained — a different person reading it should understand the task without additional context
+10. Ensure the prompt is self-contained, a different person reading it should understand the task without additional context
 
 Generate the optimized prompt now. Return only the JSON object.
 ```
@@ -163,7 +246,7 @@ The model returns a JSON object. Extract `choices[0].message.content` and parse 
 
 **For humans:** Use `prompt_plain` for pasting into chat interfaces or `prompt_structured` for review in a markdown renderer.
 
-### Example: Agent Generating a Specification Prompt
+### Example: Agent Generating a PRD Prompt
 
 ```bash
 curl -X POST https://api.openai.com/v1/chat/completions \
@@ -177,11 +260,11 @@ curl -X POST https://api.openai.com/v1/chat/completions \
     "messages": [
       {
         "role": "system",
-        "content": "You are an expert prompt engineer specializing in software development workflows. Your task is to transform a simple idea into a high-quality, production-ready prompt that will produce correct, useful output on the first or second pass.\n\nContext for this prompt type: The user is starting a new project or feature from scratch. The target model will have zero prior context. The generated prompt must be self-contained and leave nothing to assumption. Prioritize completeness and specificity over brevity.\n\nYour goal is to produce a prompt that is specific enough to minimize follow-up corrections. Vague prompts produce vague outputs. Every instruction you include should reduce ambiguity for the target model.\n\nYou must return a valid JSON object with exactly these keys:\n\n- \"prompt_plain\": A complete, copy-paste-ready prompt written as natural plain text. NO markdown syntax, NO hashtags, NO bullet symbols (*, -), NO bold/italic markers (**, __), NO code fences. Use regular paragraphs, numbered lists with \"1.\" format, and line breaks for separation.\n\n- \"prompt_structured\": The same prompt but formatted with clear markdown sections (## headings, **bold**, bullet points, numbered steps, code fences where appropriate).\n\n- \"prompt_json\": A JSON object with keys like \"system\", \"user\", \"constraints\", \"output_format\", \"evaluation_criteria\" that could be used programmatically by an agent or API.\n\n- \"optimization_notes\": A brief explanation of what optimizations were applied and why.\n\n- \"token_estimate\": An integer estimating the token count of the plain prompt.\n\nReturn ONLY the JSON object. No markdown fences, no explanation outside the JSON."
+        "content": "You are an expert prompt engineer specializing in product management, requirements definition, and product development workflows. Your task is to transform a simple idea into a high-quality, production-ready prompt that will produce correct, useful output on the first or second pass.\n\nContext for this prompt type: The user needs a professional product requirements document that can be handed to engineering and design teams. The target model should produce a structured document with clear problem framing, prioritized requirements, and testable acceptance criteria. The prompt must enforce specificity — vague requirements produce vague products.\n\nYour goal is to produce a prompt that is specific enough to minimize follow-up corrections. Vague prompts produce vague outputs. Every instruction you include should reduce ambiguity for the target model.\n\nYou must return a valid JSON object with exactly these keys:\n\n- \"prompt_plain\": A complete, copy-paste-ready prompt written as natural plain text. NO markdown syntax.\n\n- \"prompt_structured\": The same prompt formatted with markdown.\n\n- \"prompt_json\": A JSON object with keys like \"system\", \"user\", \"constraints\", \"output_format\", \"evaluation_criteria\".\n\n- \"optimization_notes\": A brief explanation of what optimizations were applied.\n\n- \"token_estimate\": An integer estimating the token count.\n\nReturn ONLY the JSON object."
       },
       {
         "role": "user",
-        "content": "Transform this idea into a high-quality prompt:\n\n**Subject Type:** Development\n**Prompt Category:** Specification Prompt\n**Category Purpose:** For starting something new where the model has no prior context. The generated prompt should be detailed and explicit.\n\n**Base Idea:** Build a REST API for user authentication with JWT tokens\n**Target Model Class:** LLM (General)\n\n**Dimensions to Address:**\n- Programming language and framework selection with version constraints\n- Project file structure and directory layout\n- Naming conventions and code style guidelines\n- Environment constraints (serverless, containerized, edge, etc.)\n- Dependency policy (external packages allowed or restricted)\n- Technical architecture and design patterns\n- Input/output specifications with concrete examples\n- Error handling strategy and edge cases\n- Testing strategy and coverage expectations\n- Performance requirements and benchmarks\n- Security requirements and threat model\n- Deployment target and infrastructure\n\n**Output Guidance:** Generate a comprehensive specification prompt. Include explicit language, framework, file structure, naming conventions, and all constraints upfront. The prompt should be 3-4 paragraphs minimum. The cost of being explicit is far lower than the cost of debugging implicit assumptions.\n\n**Model-Specific Optimization Rules:**\n- Use balanced verbosity with clear structure.\n- Prefer structured outputs (headings, lists, sections).\n- Moderate reasoning depth — explain key steps.\n- Avoid overly abstract or ambiguous phrasing.\n\n**Verbosity Level:** medium\n**Prompt Length Guidance:** Prompts should be well-structured, moderate length (800-1500 tokens).\n\n**Prompt Improvement Checklist — the generated prompt MUST:**\n1. Clarify the objective explicitly — state what the model should produce and what \"done\" looks like\n2. Define expected deliverables with concrete examples where possible\n3. Specify the output format (files, code blocks, plain text, structured data)\n4. Add relevant constraints that eliminate ambiguity\n5. Include evaluation criteria or success conditions the user can verify\n6. Address potential edge cases and failure modes\n7. Include failure handling instructions where appropriate\n8. Add step-by-step reasoning directives if the model class supports it\n9. Separate what the model should do from what it should NOT do\n10. Ensure the prompt is self-contained — a different person reading it should understand the task without additional context\n\nGenerate the optimized prompt now. Return only the JSON object."
+        "content": "Transform this idea into a high-quality prompt:\n\n**Subject Type:** Product\n**Prompt Category:** Product Requirements Document\n**Category Purpose:** For writing a full PRD with problem statement, personas, requirements, and acceptance criteria.\n\n**Base Idea:** A mobile app for tracking personal health metrics with doctor sharing\n**Target Model Class:** Frontier Model\n\n**Dimensions to Address:**\n- Product name and one-line description\n- Problem statement and evidence\n- Target user personas with behavioral context\n- Goals and success metrics\n- Feature requirements with MoSCoW prioritization\n- User stories with acceptance criteria\n- Out of scope\n- Technical constraints and dependencies\n- Design requirements and UX principles\n- Launch criteria and rollout plan\n- Open questions and assumptions to validate\n\n**Output Guidance:** Generate a prompt that produces a complete PRD ready for engineering and design review. Include explicit out-of-scope boundaries to prevent scope creep. Every feature should have acceptance criteria. A PRD without measurable success metrics is just a feature wishlist.\n\n**Verbosity Level:** high\n**Prompt Length Guidance:** Prompts can be detailed and lengthy (2000+ tokens). Use layered instructions.\n\nGenerate the optimized prompt now. Return only the JSON object."
       }
     ]
   }'
@@ -215,7 +298,7 @@ qualityprompts/
 │   └── components.css  # Buttons, tabs, panels
 ├── js/
 │   ├── app.js          # Workflow orchestration and UI event handling
-│   ├── promptEngine.js # Subject scaffolds, sub-types, model constraints, meta-prompt builder
+│   ├── promptEngine.js # Subject scaffolds, sub-types, STI roles, model constraints, meta-prompt builder
 │   ├── apiClient.js    # API client (Puter, OpenAI Chat Completions, OpenAI Responses)
 │   └── uiRenderer.js   # DOM rendering and interactions
 ├── LICENSE             # MIT License
@@ -229,7 +312,8 @@ qualityprompts/
 - API key stored in-session or optionally in localStorage
 - Supports any OpenAI-compatible endpoint (configurable base URL and model name)
 - CORS-compatible client-side fetch
-- Sub-type system is extensible — add `subTypes` to any subject scaffold in `promptEngine.js`
+- Sub-type system is extensible, add `subTypes` to any subject scaffold in `promptEngine.js`
+- STI system roles are per-subject — modify `systemRole` on any scaffold to tune the prompt engineer persona
 
 ## License
 

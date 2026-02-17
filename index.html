@@ -27,14 +27,26 @@
                 <p><strong>Quality Prompts</strong> is a free, serverless tool that transforms simple ideas into high-quality, production-ready prompts. You provide a short description of what you want, and the tool builds a detailed, structured prompt for you. It adds objectives, constraints, deliverables, evaluation criteria, and edge case handling automatically.</p>
 
                 <h4>How it works</h4>
-                <p>Start by selecting a subject type such as Development, Writing, Marketing, or Research. Then choose a target model class to optimize the prompt length and complexity for the model you plan to use. Type a short idea into the text field. A sentence or two is ideal. Click Generate Prompt and the tool will return your optimized prompt in three formats: Plain Text for copy-pasting into any chat interface, Structured with markdown headings and sections, and JSON for agents, APIs, or programmatic use.</p>
+                <p>Select a subject type, then optionally choose a prompt style to tailor the output for a specific workflow. Choose a target model class to optimize prompt length and complexity. Type a short idea into the text field, a sentence or two is ideal. Click Generate Prompt and the tool returns your optimized prompt in three formats: Plain Text for copy-pasting, Structured with markdown, and JSON for agents and APIs.</p>
 
-                <h4>Development prompt styles</h4>
-                <p>When you select Development as the subject type, a Prompt Style dropdown appears with three options based on how developers actually use prompts in practice:</p>
-                <p><strong>Specification Prompt</strong> is for starting something new where the model has no prior context. The generated prompt will be detailed and explicit, covering language, framework, file structure, naming conventions, dependency policy, and all constraints upfront. Use this when beginning a new project or feature from scratch.</p>
-                <p><strong>Iteration Prompt</strong> is for changing or improving existing code. The generated prompt will be short and surgical, pointing to exact files, functions, and lines. It avoids restating the full specification because the model already has project context. Use this when you need a targeted change, not a rewrite.</p>
-                <p><strong>Diagnostic Prompt</strong> is for debugging when something is broken and you do not know why. The generated prompt structures the problem with placeholders for error messages, the function that produced the error, the input that triggered it, and expected versus actual behavior. Use this when you need to find a root cause, not just apply a fix.</p>
-                <p>You can also select General to use the default development dimensions without a specific prompt style.</p>
+                <h4>Prompt styles</h4>
+                <p>Every subject type has specialized prompt styles that adapt the generated prompt for different workflows. When you select a subject type, the Prompt Style dropdown appears with options tailored to that category. Select General to use the default dimensions without a specific style.</p>
+
+                <p><strong>Development</strong> — Specification Prompt for new projects with no prior context. Iteration Prompt for targeted changes to existing code. Diagnostic Prompt for debugging unknown failures.</p>
+
+                <p><strong>Writing</strong> — Creative Writing (Long-Form) for essays, articles, and narrative work. Short-Form Copy for ads, taglines, and microcopy. Marketing Communications for emails, newsletters, and press releases.</p>
+
+                <p><strong>Strategy</strong> — Business Strategy for competitive positioning and growth planning. Go-to-Market Strategy for launch plans and pricing. Technical Strategy for architecture decisions and technology selection.</p>
+
+                <p><strong>Product</strong> — Product Requirements Document for full PRDs with acceptance criteria. User Stories for sprint-ready stories in standard format. Feature Specification for detailed single-feature specs covering all states.</p>
+
+                <p><strong>Design</strong> — UI/UX Design for wireframes, flows, and component specs. Design Assets for logos, icons, and visual elements. Photo Editing for image modification and compositing instructions.</p>
+
+                <p><strong>Marketing</strong> — Campaign Planning for multi-channel campaigns with budgets and KPIs. Content Strategy for editorial calendars and content pillars. Social Media for platform-specific strategies and posts.</p>
+
+                <p><strong>Research</strong> — Literature Review for systematic source synthesis and gap analysis. User Research for interview guides, surveys, and usability studies. Market Research for competitive analysis and market sizing.</p>
+
+                <p><strong>Data Analysis</strong> — Exploratory Analysis for data profiling and pattern discovery. Dashboard &amp; Reporting for KPI dashboards with metric definitions. Statistical Modeling for regression, hypothesis testing, and model validation.</p>
 
                 <h4>Tips for best results</h4>
                 <p>Keep your idea brief. The whole point of this tool is to do the heavy lifting for you, so you do not need to write a full prompt yourself. Focus on what you want accomplished, not on how to prompt for it. The more specific your idea is, the better the output will be. For example, "build a dashboard that tracks user retention by cohort" will produce a much better prompt than just "build a dashboard."</p>
