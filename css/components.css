@@ -340,6 +340,45 @@
     max-width: 480px;
 }
 
+/* OS tab switcher */
+.os-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid #ddd;
+    margin: 16px 0 0 0;
+}
+
+.os-tab-btn {
+    background: none;
+    border: none;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #777;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.os-tab-btn:hover {
+    color: #333;
+}
+
+.os-tab-btn.active {
+    color: #444;
+    border-bottom-color: #444;
+}
+
+.os-panel {
+    display: none;
+    padding: 12px 0 4px 0;
+}
+
+.os-panel.active {
+    display: block;
+}
+
 /* Terminal command blocks */
 .terminal-block {
     background: #1e1e1e;

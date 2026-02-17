@@ -27,7 +27,7 @@ const ApiClient = (() => {
         ollama: {
             label: 'Ollama (Local)',
             baseUrl: 'http://localhost:11434',
-            defaultModel: 'llama3.2'
+            defaultModel: 'gpt-oss:20b'
         },
         custom: {
             label: 'Custom Endpoint',
@@ -196,8 +196,9 @@ const ApiClient = (() => {
             if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
                 throw new Error(
                     'Could not connect to Ollama. Common fixes:\n' +
-                    '1. Make sure Ollama is running: ollama serve\n' +
-                    '2. Enable CORS: OLLAMA_ORIGINS=* ollama serve\n' +
+                    '1. Make sure Ollama is running — if you get "address already in use", stop the existing instance first:\n' +
+                    '   macOS: pkill ollama  |  Windows: Stop-Process -Name ollama -Force\n' +
+                    '2. Restart with CORS enabled: OLLAMA_ORIGINS=* ollama serve\n' +
                     '3. Check the URL is correct (default: http://localhost:11434)\n\n' +
                     'Click "Setup Instructions" in the Ollama settings for full setup guide.'
                 );

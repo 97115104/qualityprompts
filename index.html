@@ -55,7 +55,7 @@
                 <p><strong>Anthropic</strong> connects directly to the Claude Messages API. Get a key at console.anthropic.com.</p>
                 <p><strong>OpenAI</strong> connects to the Chat Completions API. Get a key at platform.openai.com.</p>
                 <p><strong>Google Gemini</strong> connects to the Gemini API. Get a key at aistudio.google.com.</p>
-                <p><strong>Ollama</strong> runs AI models locally on your machine. No API key needed, no data leaves your computer, completely free. Ollama is the recommended fallback if Puter's free tier runs out — Quality Prompts will automatically suggest it with setup instructions if Puter encounters an error. Select Ollama (Local) as the provider, make sure Ollama is running with CORS enabled (<code>OLLAMA_ORIGINS=* ollama serve</code>), and enter the model name you've pulled. Click Setup Instructions in the Ollama settings for a full guide. When connecting to Ollama, Quality Prompts checks your installed models first and verifies the connection before sending the request.</p>
+                <p><strong>Ollama</strong> runs AI models locally on your machine with gpt-oss:20b as the default model. No API key needed, no data leaves your computer, completely free. Ollama is the recommended fallback if Puter's free tier runs out — Quality Prompts will automatically suggest it with OS-specific setup instructions (macOS, Windows, Linux) if Puter encounters an error. This works from any URL including GitHub Pages — you just need to start Ollama with <code>OLLAMA_ORIGINS=*</code> to allow browser access. Click Setup Instructions in the Ollama settings for a full guide with OS-specific steps. Quality Prompts checks your installed models and verifies the connection before sending the request.</p>
                 <p><strong>Custom Endpoint</strong> supports any OpenAI-compatible API including Together, LM Studio, and other self-hosted models. Enter your base URL and it uses the /chat/completions format with Bearer token auth.</p>
 
                 <h4>Tips for best results</h4>
@@ -122,7 +122,7 @@
                 </div>
                 <div class="form-group">
                     <label for="ollama-model">Model</label>
-                    <input type="text" id="ollama-model" placeholder="llama3.2" value="llama3.2">
+                    <input type="text" id="ollama-model" placeholder="gpt-oss:20b" value="gpt-oss:20b">
                 </div>
                 <div class="ollama-hint-row">
                     <p class="settings-hint">Runs locally on your machine — no API key, no data leaves your computer.</p>
@@ -138,45 +138,112 @@
                         <button id="btn-close-ollama" class="btn-modal-close">&times;</button>
                     </div>
                     <div class="modal-body">
-                        <p>Ollama lets you run AI models locally on your own machine. No API key needed, no data leaves your computer, and it's completely free.</p>
+                        <p>Ollama lets you run AI models locally on your own machine. No API key needed, no data leaves your computer, and it's completely free. This works whether you're running Quality Prompts locally or from <strong>https://97115104.github.io/qualityprompts/</strong> — your browser connects directly to Ollama on your machine.</p>
 
-                        <h4>1. Install Ollama</h4>
-                        <p>Download and install from <strong>ollama.com</strong>. Available for macOS, Linux, and Windows.</p>
+                        <div class="os-tabs">
+                            <button class="os-tab-btn active" data-os="mac">macOS</button>
+                            <button class="os-tab-btn" data-os="win">Windows</button>
+                            <button class="os-tab-btn" data-os="linux">Linux</button>
+                        </div>
 
-                        <h4>2. Pull a model</h4>
-                        <p>Open your terminal and run:</p>
-                        <pre class="terminal-block">ollama list</pre>
-                        <p>If you already have models installed, you can use one of those. If you see a model with <strong>gpt-oss</strong> in the name, use that — it's the same model family as Puter's default.</p>
-                        <p>If you need to pull a new model:</p>
-                        <pre class="terminal-block">ollama pull llama3.2</pre>
-                        <p>Recommended models for prompt generation:</p>
-                        <ul>
-                            <li><strong>llama3.2</strong> — 3B params, fast, good for most tasks</li>
-                            <li><strong>llama3.1:8b</strong> — 8B params, better quality</li>
-                            <li><strong>mistral</strong> — 7B params, strong instruction following</li>
-                            <li><strong>qwen2.5:14b</strong> — 14B params, excellent for structured output</li>
-                            <li><strong>gemma2:9b</strong> — 9B params, good balance of speed and quality</li>
-                        </ul>
+                        <!-- macOS -->
+                        <div class="os-panel active" data-os="mac">
+                            <h4>1. Install Ollama</h4>
+                            <pre class="terminal-block">curl -fsSL https://ollama.com/install.sh | sh</pre>
+                            <p>Or download the macOS app from <strong>ollama.com/download</strong>.</p>
 
-                        <h4>3. Start Ollama with CORS enabled</h4>
-                        <p>Quality Prompts runs in your browser, so Ollama needs to allow cross-origin requests. Start it with:</p>
-                        <pre class="terminal-block">OLLAMA_ORIGINS=* ollama serve</pre>
-                        <p>On Windows (PowerShell):</p>
-                        <pre class="terminal-block">$env:OLLAMA_ORIGINS="*"; ollama serve</pre>
-                        <p>If Ollama is already running (e.g. the desktop app), you'll need to stop it first and restart with the CORS flag, or set the environment variable permanently.</p>
+                            <h4>2. Check for existing models</h4>
+                            <pre class="terminal-block">ollama list</pre>
+                            <p>If you see <strong>gpt-oss:20b</strong> or any <strong>gpt-oss</strong> model, skip to step 4. Otherwise continue.</p>
 
-                        <h4>4. Configure Quality Prompts</h4>
+                            <h4>3. Pull the default model</h4>
+                            <pre class="terminal-block">ollama pull gpt-oss:20b</pre>
+
+                            <h4>4. Start Ollama with remote access enabled</h4>
+                            <p>First, stop any running Ollama instance. If you see <code>address already in use</code> when running <code>ollama serve</code>, Ollama is already running and must be stopped first:</p>
+                            <pre class="terminal-block"># If the desktop app is running, click the menu bar icon → Quit Ollama
+# Or kill the process:
+pkill ollama</pre>
+                            <p>Then start Ollama with browser access:</p>
+                            <pre class="terminal-block">OLLAMA_ORIGINS=* ollama serve</pre>
+                            <p>To make this permanent so you never have to set it manually, add to your <code>~/.zshrc</code> (or <code>~/.bashrc</code>):</p>
+                            <pre class="terminal-block">export OLLAMA_ORIGINS=*</pre>
+                            <p>Then restart your terminal and the Ollama desktop app will use this setting automatically.</p>
+                        </div>
+
+                        <!-- Windows -->
+                        <div class="os-panel" data-os="win">
+                            <h4>1. Install Ollama</h4>
+                            <p>Download the Windows installer from <strong>ollama.com/download</strong> and run it.</p>
+
+                            <h4>2. Check for existing models</h4>
+                            <p>Open PowerShell and run:</p>
+                            <pre class="terminal-block">ollama list</pre>
+                            <p>If you see <strong>gpt-oss:20b</strong> or any <strong>gpt-oss</strong> model, skip to step 4. Otherwise continue.</p>
+
+                            <h4>3. Pull the default model</h4>
+                            <pre class="terminal-block">ollama pull gpt-oss:20b</pre>
+
+                            <h4>4. Start Ollama with remote access enabled</h4>
+                            <p>First, stop any running Ollama instance. If you see <code>address already in use</code>, Ollama is already running. Close it from the system tray (right-click → Quit), or in PowerShell:</p>
+                            <pre class="terminal-block">Stop-Process -Name ollama -Force</pre>
+                            <p>Then start with browser access:</p>
+                            <pre class="terminal-block">$env:OLLAMA_ORIGINS="*"; ollama serve</pre>
+                            <p>To make this permanent so Ollama always allows browser access:</p>
+                            <pre class="terminal-block">[System.Environment]::SetEnvironmentVariable("OLLAMA_ORIGINS", "*", "User")</pre>
+                            <p>Then restart the Ollama desktop app — it will use this setting automatically.</p>
+                        </div>
+
+                        <!-- Linux -->
+                        <div class="os-panel" data-os="linux">
+                            <h4>1. Install Ollama</h4>
+                            <pre class="terminal-block">curl -fsSL https://ollama.com/install.sh | sh</pre>
+
+                            <h4>2. Check for existing models</h4>
+                            <pre class="terminal-block">ollama list</pre>
+                            <p>If you see <strong>gpt-oss:20b</strong> or any <strong>gpt-oss</strong> model, skip to step 4. Otherwise continue.</p>
+
+                            <h4>3. Pull the default model</h4>
+                            <pre class="terminal-block">ollama pull gpt-oss:20b</pre>
+
+                            <h4>4. Start Ollama with remote access enabled</h4>
+                            <p>If Ollama is running as a systemd service (most common on Linux), configure the environment variable and restart:</p>
+                            <pre class="terminal-block">sudo systemctl edit ollama</pre>
+                            <p>Add the following under <code>[Service]</code>:</p>
+                            <pre class="terminal-block">[Service]
+Environment="OLLAMA_ORIGINS=*"</pre>
+                            <p>Then restart the service:</p>
+                            <pre class="terminal-block">sudo systemctl restart ollama</pre>
+                            <p>If you see <code>address already in use</code> when running manually, stop the service first:</p>
+                            <pre class="terminal-block">sudo systemctl stop ollama</pre>
+                            <p>Then run directly in your terminal:</p>
+                            <pre class="terminal-block">OLLAMA_ORIGINS=* ollama serve</pre>
+                        </div>
+
+                        <h4>5. Configure Quality Prompts</h4>
                         <ol>
-                            <li>Select <strong>Ollama (Local)</strong> as the API Provider</li>
-                            <li>The URL defaults to <strong>http://localhost:11434</strong> — change it if you're using a different port</li>
-                            <li>Enter the model name you pulled (e.g. <strong>llama3.2</strong>)</li>
-                            <li>Click <strong>Generate Prompt</strong></li>
+                            <li>Select <strong>Ollama (Local)</strong> as the API Provider in Settings</li>
+                            <li>The URL defaults to <code>http://localhost:11434</code></li>
+                            <li>The model defaults to <strong>gpt-oss:20b</strong> — change it if you want to use a different model</li>
+                            <li>Click <strong>Generate Prompt</strong> — Quality Prompts will verify the connection and model before sending</li>
                         </ol>
 
+                        <h4>Other recommended models</h4>
+                        <ul>
+                            <li><strong>gpt-oss:20b</strong> — 21B params, default, same model family as Puter's free tier</li>
+                            <li><strong>qwen2.5:14b</strong> — 14B params, excellent for structured output</li>
+                            <li><strong>mistral</strong> — 7B params, strong instruction following</li>
+                            <li><strong>llama3.2</strong> — 3B params, fastest, good for quick iterations</li>
+                        </ul>
+
+                        <h4>Why is OLLAMA_ORIGINS needed?</h4>
+                        <p>Browsers enforce a security policy called CORS that blocks web pages from making requests to different servers. When you use Quality Prompts from <code>https://97115104.github.io</code> (or any URL that isn't <code>localhost</code>), your browser needs Ollama to explicitly allow those requests. Setting <code>OLLAMA_ORIGINS=*</code> tells Ollama to accept requests from any web page, including GitHub Pages. This is safe because Ollama is only accessible on your local machine.</p>
+
                         <h4>Troubleshooting</h4>
-                        <p><strong>CORS error / Failed to fetch:</strong> Make sure Ollama is running with <code>OLLAMA_ORIGINS=*</code>. The default Ollama server blocks browser requests without this.</p>
-                        <p><strong>Connection refused:</strong> Make sure Ollama is running (<code>ollama serve</code>) and check that the URL and port are correct.</p>
-                        <p><strong>Model not found:</strong> Run <code>ollama list</code> to see installed models, and make sure the model name matches exactly.</p>
+                        <p><strong>"address already in use":</strong> Ollama is already running (usually the desktop app). You need to stop it first, then restart with <code>OLLAMA_ORIGINS=*</code>. On macOS: quit from the menu bar icon or run <code>pkill ollama</code>. On Windows: close from the system tray or run <code>Stop-Process -Name ollama -Force</code>. On Linux: <code>sudo systemctl stop ollama</code>. Then run <code>OLLAMA_ORIGINS=* ollama serve</code>.</p>
+                        <p><strong>CORS error / Failed to fetch from GitHub Pages:</strong> This means <code>OLLAMA_ORIGINS=*</code> is not set. You must stop Ollama and restart it with the environment variable — it cannot be changed while running. See the instructions for your OS above.</p>
+                        <p><strong>Connection refused:</strong> Ollama is not running. Start it with <code>OLLAMA_ORIGINS=* ollama serve</code> and check the URL is <code>http://localhost:11434</code>.</p>
+                        <p><strong>Model not found:</strong> Run <code>ollama list</code> to see installed models. Pull the model you need with <code>ollama pull gpt-oss:20b</code>.</p>
                     </div>
                 </div>
             </div>
@@ -295,41 +362,66 @@
                 <div class="modal-body">
                     <p id="puter-fallback-reason"></p>
 
-                    <p>You can run the same GPT-OSS models locally on your machine for free using <strong>Ollama</strong>. No API key needed, no usage limits, and no data leaves your computer.</p>
+                    <p>You can run GPT-OSS locally on your machine for free using <strong>Ollama</strong>. No API key, no usage limits, no data leaves your computer. This works from any URL including GitHub Pages.</p>
 
-                    <h4>Quick setup (2 minutes)</h4>
+                    <div class="os-tabs">
+                        <button class="os-tab-btn active" data-os="mac">macOS</button>
+                        <button class="os-tab-btn" data-os="win">Windows</button>
+                        <button class="os-tab-btn" data-os="linux">Linux</button>
+                    </div>
 
-                    <p><strong>Step 1:</strong> Install Ollama</p>
-                    <pre class="terminal-block">curl -fsSL https://ollama.com/install.sh | sh</pre>
-                    <p>Or download from <strong>ollama.com</strong> (macOS, Windows, Linux).</p>
+                    <!-- macOS -->
+                    <div class="os-panel active" data-os="mac">
+                        <p><strong>1.</strong> Install Ollama:</p>
+                        <pre class="terminal-block">curl -fsSL https://ollama.com/install.sh | sh</pre>
 
-                    <p><strong>Step 2:</strong> Check for existing models</p>
-                    <pre class="terminal-block">ollama list</pre>
-                    <p>If you already have models installed, you can skip the next step and use one of those.</p>
+                        <p><strong>2.</strong> Check for existing models and pull GPT-OSS:</p>
+                        <pre class="terminal-block">ollama list
+ollama pull gpt-oss:20b</pre>
 
-                    <p><strong>Step 3:</strong> Pull a model</p>
-                    <pre class="terminal-block">ollama pull llama3.2</pre>
-                    <p>Recommended models for prompt generation:</p>
-                    <ul>
-                        <li><strong>llama3.2</strong> — 3B params, fast, good quality</li>
-                        <li><strong>qwen2.5:14b</strong> — 14B params, excellent for structured output</li>
-                        <li><strong>mistral</strong> — 7B params, strong instruction following</li>
-                    </ul>
+                        <p><strong>3.</strong> Stop the running Ollama instance, then restart with browser access:</p>
+                        <pre class="terminal-block"># Quit from menu bar icon, or:
+pkill ollama
+OLLAMA_ORIGINS=* ollama serve</pre>
+                        <p>To make permanent, add <code>export OLLAMA_ORIGINS=*</code> to your <code>~/.zshrc</code> and restart the desktop app.</p>
+                    </div>
 
-                    <p><strong>Step 4:</strong> Start Ollama with browser access</p>
-                    <pre class="terminal-block">OLLAMA_ORIGINS=* ollama serve</pre>
-                    <p>Windows (PowerShell): <code>$env:OLLAMA_ORIGINS="*"; ollama serve</code></p>
+                    <!-- Windows -->
+                    <div class="os-panel" data-os="win">
+                        <p><strong>1.</strong> Download and install from <strong>ollama.com/download</strong></p>
 
-                    <p><strong>Step 5:</strong> Switch Quality Prompts to Ollama</p>
-                    <ol>
-                        <li>Click <strong>API Settings</strong> at the top</li>
-                        <li>Change API Provider to <strong>Ollama (Local)</strong></li>
-                        <li>The URL defaults to <code>http://localhost:11434</code> — just copy/paste this if needed</li>
-                        <li>Enter your model name (e.g. <strong>llama3.2</strong>)</li>
-                        <li>Click <strong>Generate Prompt</strong></li>
-                    </ol>
+                        <p><strong>2.</strong> Open PowerShell, check for models and pull GPT-OSS:</p>
+                        <pre class="terminal-block">ollama list
+ollama pull gpt-oss:20b</pre>
 
-                    <button id="btn-switch-ollama" class="btn-primary" style="margin-top: 12px;">Switch to Ollama now</button>
+                        <p><strong>3.</strong> Stop the running Ollama instance, then restart with browser access:</p>
+                        <pre class="terminal-block"># Close from system tray, or:
+Stop-Process -Name ollama -Force
+$env:OLLAMA_ORIGINS="*"; ollama serve</pre>
+                        <p>To make permanent: <code>[System.Environment]::SetEnvironmentVariable("OLLAMA_ORIGINS", "*", "User")</code> then restart the app.</p>
+                    </div>
+
+                    <!-- Linux -->
+                    <div class="os-panel" data-os="linux">
+                        <p><strong>1.</strong> Install Ollama:</p>
+                        <pre class="terminal-block">curl -fsSL https://ollama.com/install.sh | sh</pre>
+
+                        <p><strong>2.</strong> Check for existing models and pull GPT-OSS:</p>
+                        <pre class="terminal-block">ollama list
+ollama pull gpt-oss:20b</pre>
+
+                        <p><strong>3.</strong> If running as a service, configure and restart:</p>
+                        <pre class="terminal-block">sudo systemctl edit ollama
+# Add: Environment="OLLAMA_ORIGINS=*"
+sudo systemctl restart ollama</pre>
+                        <p>Or stop the service and run manually:</p>
+                        <pre class="terminal-block">sudo systemctl stop ollama
+OLLAMA_ORIGINS=* ollama serve</pre>
+                    </div>
+
+                    <p><strong>4.</strong> Click the button below — it sets the provider to Ollama with the right defaults:</p>
+
+                    <button id="btn-switch-ollama" class="btn-primary" style="margin-top: 8px;">Switch to Ollama now</button>
                 </div>
             </div>
         </div>

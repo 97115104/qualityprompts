@@ -286,7 +286,7 @@ curl -X POST https://api.openai.com/v1/chat/completions \
 | Anthropic | `anthropic` | `https://api.anthropic.com/v1` | `x-api-key` | With header | Uses Messages API format. Requires `anthropic-dangerous-direct-browser-access` header. |
 | OpenAI | `openai` | `https://api.openai.com/v1` | `Authorization: Bearer` | No | Uses Chat Completions format. Requires CORS proxy for browser use. |
 | Google Gemini | `google` | `https://generativelanguage.googleapis.com/v1beta` | API key in URL | Yes | Uses Gemini generateContent format. |
-| Ollama | `ollama` | `http://localhost:11434` | None required | Requires `OLLAMA_ORIGINS=*` | Local models. No API key, no data leaves your machine. |
+| Ollama | `ollama` | `http://localhost:11434` | None required | Requires `OLLAMA_ORIGINS=*` | Local models (default: gpt-oss:20b). No API key, works from GitHub Pages. |
 | Custom | `custom` | User-defined | `Authorization: Bearer` | Varies | Any OpenAI-compatible endpoint (Together, LM Studio, etc.). |
 
 #### Provider-specific request formats
@@ -333,13 +333,13 @@ curl -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0
 
 Response: `candidates[0].content.parts[0].text` contains the JSON output.
 
-**Ollama** uses its OpenAI-compatible endpoint (requires `OLLAMA_ORIGINS=*` for browser access):
+**Ollama** uses its OpenAI-compatible endpoint (requires `OLLAMA_ORIGINS=*` for browser access from GitHub Pages):
 
 ```bash
 curl -X POST http://localhost:11434/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "llama3.2",
+    "model": "gpt-oss:20b",
     "messages": [
       { "role": "system", "content": "<system message>" },
       { "role": "user", "content": "<user message>" }
@@ -353,17 +353,48 @@ Response: Same as OpenAI format — `choices[0].message.content` contains the JS
 
 ## Ollama Fallback
 
-If Puter encounters an error (rate limit, service unavailable, authentication issues), Quality Prompts automatically shows a guided setup modal for running locally with Ollama. This ensures the tool always works regardless of Puter's availability.
+If Puter encounters an error (rate limit, service unavailable, authentication issues), Quality Prompts automatically shows a guided setup modal for running locally with Ollama. This ensures the tool always works regardless of Puter's availability — including from `https://97115104.github.io/qualityprompts/`.
 
-The fallback modal walks users through:
+The default Ollama model is **gpt-oss:20b** — the same model family as Puter's free tier, running entirely on your machine.
 
-1. Installing Ollama
-2. Checking for existing models (`ollama list`) — if GPT-OSS is already installed, it's suggested automatically
-3. Pulling a recommended model
-4. Starting Ollama with CORS enabled (`OLLAMA_ORIGINS=* ollama serve`)
-5. Switching Quality Prompts to the Ollama provider
+### Quick setup
 
-A "Switch to Ollama now" button in the modal automatically changes the API provider and opens the settings panel.
+The fallback modal provides OS-specific instructions (macOS, Windows, Linux) via tabs. The core steps are:
+
+**macOS / Linux:**
+
+```bash
+# Install Ollama
+curl -fsSL https://ollama.com/install.sh | sh
+
+# Check existing models — if gpt-oss is listed, skip the pull
+ollama list
+
+# Pull the default model
+ollama pull gpt-oss:20b
+
+# Start with browser access enabled (required for GitHub Pages)
+OLLAMA_ORIGINS=* ollama serve
+```
+
+**Windows (PowerShell):**
+
+```powershell
+# Install from ollama.com/download, then:
+ollama list
+ollama pull gpt-oss:20b
+
+# Close the Ollama tray icon, then:
+$env:OLLAMA_ORIGINS="*"; ollama serve
+```
+
+### Why OLLAMA_ORIGINS is required
+
+When you use Quality Prompts from `https://97115104.github.io` (or any non-localhost URL), your browser enforces CORS security and blocks requests to `http://localhost:11434` unless Ollama explicitly allows them. Setting `OLLAMA_ORIGINS=*` tells Ollama to accept requests from any web page. This is safe because Ollama only listens on your local machine.
+
+On localhost (`http://localhost:8000`), most browsers relax CORS for same-machine requests, which is why it works without the flag locally.
+
+A "Switch to Ollama now" button in the modal automatically changes the API provider, sets the defaults, and opens the settings panel.
 
 ### Preflight checks
 

@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     UIRenderer.setupDownloadButtons();
     setupShareIdeaButton();
     setupOpenInButtons();
+    setupOsTabs();
 
     // How to use modal
     document.getElementById('btn-info').addEventListener('click', () => {
@@ -454,6 +455,23 @@ function saveSettings() {
             else localStorage.removeItem('qp_model');
         }
     }
+}
+
+function setupOsTabs() {
+    document.querySelectorAll('.os-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const os = btn.dataset.os;
+            const container = btn.closest('.modal-body') || btn.closest('.modal');
+
+            // Deactivate all tabs and panels in this container
+            container.querySelectorAll('.os-tab-btn').forEach(t => t.classList.remove('active'));
+            container.querySelectorAll('.os-panel').forEach(p => p.classList.remove('active'));
+
+            // Activate selected
+            btn.classList.add('active');
+            container.querySelector(`.os-panel[data-os="${os}"]`).classList.add('active');
+        });
+    });
 }
 
 function updateLoadingStatus(text, status) {
