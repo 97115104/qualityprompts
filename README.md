@@ -15,7 +15,8 @@ Transform simple ideas into high-quality, production-ready prompts optimized for
 - **Use this prompt** — Open the generated prompt directly in ChatGPT, Claude, Copilot, or Gemini
 - **Copy, download, and email** — One-click copy, download, or share the generated prompt via email
 - **URL routing** — Prefill prompts via query parameters and optionally auto-generate on page load
-- **Smart loading UX** — Slow-generation hint with one-click guidance for switching to a faster model
+- **Smart loading UX** — Preflight connection checks, progressive status updates, and slow-generation hints
+- **Automatic fallback** — When Puter errors occur, a guided Ollama setup walkthrough appears so the tool always works
 
 ## How It Works
 
@@ -350,6 +351,31 @@ curl -X POST http://localhost:11434/v1/chat/completions \
 
 Response: Same as OpenAI format — `choices[0].message.content` contains the JSON output. No API key required.
 
+## Ollama Fallback
+
+If Puter encounters an error (rate limit, service unavailable, authentication issues), Quality Prompts automatically shows a guided setup modal for running locally with Ollama. This ensures the tool always works regardless of Puter's availability.
+
+The fallback modal walks users through:
+
+1. Installing Ollama
+2. Checking for existing models (`ollama list`) — if GPT-OSS is already installed, it's suggested automatically
+3. Pulling a recommended model
+4. Starting Ollama with CORS enabled (`OLLAMA_ORIGINS=* ollama serve`)
+5. Switching Quality Prompts to the Ollama provider
+
+A "Switch to Ollama now" button in the modal automatically changes the API provider and opens the settings panel.
+
+### Preflight checks
+
+When using Ollama or a custom endpoint, Quality Prompts verifies the connection and model before sending the actual prompt request:
+
+- **Connection check** — Confirms the server is reachable and CORS is enabled
+- **Model verification** — Queries installed models via `/api/tags` and confirms the selected model exists
+- **GPT-OSS detection** — If a GPT-OSS model is installed but not selected, a tip is shown suggesting it
+- **Progressive status** — Loading indicators update through "Checking connection", "Connected", "Sending request", and "Generating your prompt"
+
+If the preflight check fails, a clear error message explains exactly what to fix before any request is sent.
+
 ## URL Routing
 
 Quality Prompts supports prefilling the prompt idea via URL query parameters. This is useful for sharing specific prompts, bookmarking common workflows, or integrating with other tools.
@@ -440,6 +466,8 @@ qualityprompts/
 - Seven built-in API providers with native request format handling per provider
 - Puter and OpenRouter work directly in the browser without CORS issues
 - Ollama works locally with `OLLAMA_ORIGINS=*` — no API key, no data leaves your machine
+- Preflight checks verify Ollama/custom endpoint connectivity and model availability before sending requests
+- Puter errors automatically trigger a guided Ollama fallback modal with setup instructions
 - Anthropic, OpenAI, and Google require either CORS proxies or non-browser usage
 - Custom endpoint supports any OpenAI-compatible API with configurable base URL
 - URL routing supports `?prompt=`, bare `?=`, and `&enter` for auto-generation

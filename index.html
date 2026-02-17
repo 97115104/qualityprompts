@@ -55,7 +55,7 @@
                 <p><strong>Anthropic</strong> connects directly to the Claude Messages API. Get a key at console.anthropic.com.</p>
                 <p><strong>OpenAI</strong> connects to the Chat Completions API. Get a key at platform.openai.com.</p>
                 <p><strong>Google Gemini</strong> connects to the Gemini API. Get a key at aistudio.google.com.</p>
-                <p><strong>Ollama</strong> runs AI models locally on your machine. No API key needed, no data leaves your computer, completely free. Select Ollama (Local) as the provider, make sure Ollama is running with CORS enabled (<code>OLLAMA_ORIGINS=* ollama serve</code>), and enter the model name you've pulled. Click Setup Instructions in the Ollama settings for a full guide.</p>
+                <p><strong>Ollama</strong> runs AI models locally on your machine. No API key needed, no data leaves your computer, completely free. Ollama is the recommended fallback if Puter's free tier runs out — Quality Prompts will automatically suggest it with setup instructions if Puter encounters an error. Select Ollama (Local) as the provider, make sure Ollama is running with CORS enabled (<code>OLLAMA_ORIGINS=* ollama serve</code>), and enter the model name you've pulled. Click Setup Instructions in the Ollama settings for a full guide. When connecting to Ollama, Quality Prompts checks your installed models first and verifies the connection before sending the request.</p>
                 <p><strong>Custom Endpoint</strong> supports any OpenAI-compatible API including Together, LM Studio, and other self-hosted models. Enter your base URL and it uses the /chat/completions format with Bearer token auth.</p>
 
                 <h4>Tips for best results</h4>
@@ -145,8 +145,11 @@
 
                         <h4>2. Pull a model</h4>
                         <p>Open your terminal and run:</p>
-                        <pre style="background:#1e1e1e;color:#d4d4d4;padding:12px;border-radius:6px;font-size:13px;">ollama pull llama3.2</pre>
-                        <p>Other recommended models for prompt generation:</p>
+                        <pre class="terminal-block">ollama list</pre>
+                        <p>If you already have models installed, you can use one of those. If you see a model with <strong>gpt-oss</strong> in the name, use that — it's the same model family as Puter's default.</p>
+                        <p>If you need to pull a new model:</p>
+                        <pre class="terminal-block">ollama pull llama3.2</pre>
+                        <p>Recommended models for prompt generation:</p>
                         <ul>
                             <li><strong>llama3.2</strong> — 3B params, fast, good for most tasks</li>
                             <li><strong>llama3.1:8b</strong> — 8B params, better quality</li>
@@ -157,9 +160,9 @@
 
                         <h4>3. Start Ollama with CORS enabled</h4>
                         <p>Quality Prompts runs in your browser, so Ollama needs to allow cross-origin requests. Start it with:</p>
-                        <pre style="background:#1e1e1e;color:#d4d4d4;padding:12px;border-radius:6px;font-size:13px;">OLLAMA_ORIGINS=* ollama serve</pre>
+                        <pre class="terminal-block">OLLAMA_ORIGINS=* ollama serve</pre>
                         <p>On Windows (PowerShell):</p>
-                        <pre style="background:#1e1e1e;color:#d4d4d4;padding:12px;border-radius:6px;font-size:13px;">$env:OLLAMA_ORIGINS="*"; ollama serve</pre>
+                        <pre class="terminal-block">$env:OLLAMA_ORIGINS="*"; ollama serve</pre>
                         <p>If Ollama is already running (e.g. the desktop app), you'll need to stop it first and restart with the CORS flag, or set the environment variable permanently.</p>
 
                         <h4>4. Configure Quality Prompts</h4>
@@ -256,8 +259,8 @@
         <!-- Loading -->
         <div id="loading-section" class="loading-container hidden">
             <div class="spinner"></div>
-            <div class="loading-text">Generating your prompt...</div>
-            <div class="loading-status">Analyzing subject type, optimizing for target model</div>
+            <div id="loading-text" class="loading-text">Generating your prompt...</div>
+            <div id="loading-status" class="loading-status">Analyzing subject type, optimizing for target model</div>
             <div id="slow-hint" class="slow-hint hidden">
                 Taking too long? <a href="#" id="slow-hint-link">Try a faster model</a>
             </div>
@@ -278,6 +281,55 @@
                         <li>Click <strong>Generate Prompt</strong> again</li>
                     </ol>
                     <p>The 20b model is roughly 2-3x faster with slightly lower quality. Both models are free through Puter.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Puter Fallback Modal -->
+        <div id="puter-fallback-modal" class="modal-overlay hidden">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3>Puter isn't available — run locally with Ollama</h3>
+                    <button id="btn-close-fallback" class="btn-modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p id="puter-fallback-reason"></p>
+
+                    <p>You can run the same GPT-OSS models locally on your machine for free using <strong>Ollama</strong>. No API key needed, no usage limits, and no data leaves your computer.</p>
+
+                    <h4>Quick setup (2 minutes)</h4>
+
+                    <p><strong>Step 1:</strong> Install Ollama</p>
+                    <pre class="terminal-block">curl -fsSL https://ollama.com/install.sh | sh</pre>
+                    <p>Or download from <strong>ollama.com</strong> (macOS, Windows, Linux).</p>
+
+                    <p><strong>Step 2:</strong> Check for existing models</p>
+                    <pre class="terminal-block">ollama list</pre>
+                    <p>If you already have models installed, you can skip the next step and use one of those.</p>
+
+                    <p><strong>Step 3:</strong> Pull a model</p>
+                    <pre class="terminal-block">ollama pull llama3.2</pre>
+                    <p>Recommended models for prompt generation:</p>
+                    <ul>
+                        <li><strong>llama3.2</strong> — 3B params, fast, good quality</li>
+                        <li><strong>qwen2.5:14b</strong> — 14B params, excellent for structured output</li>
+                        <li><strong>mistral</strong> — 7B params, strong instruction following</li>
+                    </ul>
+
+                    <p><strong>Step 4:</strong> Start Ollama with browser access</p>
+                    <pre class="terminal-block">OLLAMA_ORIGINS=* ollama serve</pre>
+                    <p>Windows (PowerShell): <code>$env:OLLAMA_ORIGINS="*"; ollama serve</code></p>
+
+                    <p><strong>Step 5:</strong> Switch Quality Prompts to Ollama</p>
+                    <ol>
+                        <li>Click <strong>API Settings</strong> at the top</li>
+                        <li>Change API Provider to <strong>Ollama (Local)</strong></li>
+                        <li>The URL defaults to <code>http://localhost:11434</code> — just copy/paste this if needed</li>
+                        <li>Enter your model name (e.g. <strong>llama3.2</strong>)</li>
+                        <li>Click <strong>Generate Prompt</strong></li>
+                    </ol>
+
+                    <button id="btn-switch-ollama" class="btn-primary" style="margin-top: 12px;">Switch to Ollama now</button>
                 </div>
             </div>
         </div>

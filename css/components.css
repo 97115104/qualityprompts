@@ -340,6 +340,19 @@
     max-width: 480px;
 }
 
+/* Terminal command blocks */
+.terminal-block {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: monospace;
+    overflow-x: auto;
+    margin: 8px 0;
+    user-select: all;
+}
+
 /* Ollama settings hint row */
 .ollama-hint-row {
     display: flex;

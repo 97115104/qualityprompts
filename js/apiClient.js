@@ -91,27 +91,27 @@ const ApiClient = (() => {
             const code = err?.error?.code || err?.code || '';
             const status = err?.error?.status || err?.status || 0;
 
-            // Rate limit / usage exceeded
+            // Rate limit / usage exceeded — suggest Ollama fallback
             if (code === 'rate_limit_exceeded' || status === 429
                 || msg.includes('rate_limit') || msg.includes('rate limit')
                 || msg.includes('quota') || msg.includes('insufficient')) {
-                throw new Error(
-                    'Puter usage limit reached. Puter gives each user a free allowance for AI requests. ' +
-                    'You may have exceeded your free tier. Options:\n' +
-                    '1. Wait a few minutes and try again\n' +
-                    '2. Switch to a smaller model (gpt-oss-20b) in API Settings\n' +
-                    '3. Try a different API provider (OpenRouter, Anthropic, etc.)'
+                const err2 = new Error(
+                    'Puter free usage limit reached.'
                 );
+                err2.puterFallback = true;
+                throw err2;
             }
 
             // Authentication / session issues
             if (code === 'auth_error' || code === 'unauthorized' || status === 401
                 || msg.includes('auth') || msg.includes('login') || msg.includes('sign in')
                 || msg.includes('session') || msg.includes('token_expired')) {
-                throw new Error(
-                    'Puter authentication error. Your session may have expired. ' +
+                const err2 = new Error(
+                    'Puter authentication error. Your session may have expired.\n' +
                     'Try refreshing the page — Puter will prompt you to sign in again.'
                 );
+                err2.puterFallback = true;
+                throw err2;
             }
 
             // Content filter
@@ -137,12 +137,13 @@ const ApiClient = (() => {
                 );
             }
 
-            // Service unavailable
+            // Service unavailable — suggest Ollama fallback
             if (status === 503 || status === 502 || msg.includes('unavailable') || msg.includes('overloaded')) {
-                throw new Error(
-                    'Puter\'s AI service is temporarily unavailable or overloaded. ' +
-                    'Wait a minute and try again, or switch to a different API provider.'
+                const err2 = new Error(
+                    'Puter\'s AI service is temporarily unavailable.'
                 );
+                err2.puterFallback = true;
+                throw err2;
             }
 
             // Timeout
@@ -153,10 +154,9 @@ const ApiClient = (() => {
                 );
             }
 
-            throw new Error(
-                'Puter API error: ' + msg + '\n\n' +
-                'If this persists, try refreshing the page or switching to a different API provider in Settings.'
-            );
+            const err2 = new Error('Puter API error: ' + msg);
+            err2.puterFallback = true;
+            throw err2;
         }
 
         const content = response?.message?.content;
@@ -502,5 +502,93 @@ const ApiClient = (() => {
             .trim();
     }
 
-    return { generatePrompt, PROVIDERS };
+    // --- Preflight check for local/custom endpoints ---
+
+    async function preflightCheck({ apiMode, ollamaUrl, ollamaModel, baseUrl, model, apiKey }) {
+        if (apiMode === 'ollama') {
+            const base = (ollamaUrl || PROVIDERS.ollama.baseUrl).replace(/\/+$/, '');
+            const modelName = ollamaModel || PROVIDERS.ollama.defaultModel;
+
+            // Check Ollama is reachable
+            let tagsResponse;
+            try {
+                tagsResponse = await fetch(`${base}/api/tags`);
+            } catch {
+                return {
+                    ok: false,
+                    error: 'Cannot connect to Ollama at ' + base + '.\n' +
+                        'Make sure Ollama is running: OLLAMA_ORIGINS=* ollama serve'
+                };
+            }
+
+            // Check which models are installed
+            const tagsData = await tagsResponse.json().catch(() => null);
+            const installedModels = (tagsData?.models || []).map(m => m.name);
+            const installedNames = installedModels.map(n => n.split(':')[0]);
+
+            if (installedModels.length === 0) {
+                return {
+                    ok: false,
+                    error: 'Ollama is running but has no models installed.\n' +
+                        'Run: ollama pull ' + modelName
+                };
+            }
+
+            // Check if the requested model is installed
+            const modelBase = modelName.split(':')[0];
+            const hasModel = installedModels.some(n => n === modelName) ||
+                             installedNames.some(n => n === modelBase);
+
+            if (!hasModel) {
+                // Check if they have gpt-oss
+                const hasGptOss = installedNames.some(n => n.includes('gpt-oss'));
+                let suggestion = 'Model "' + modelName + '" is not installed.\n' +
+                    'Installed models: ' + installedModels.join(', ') + '\n\n';
+                if (hasGptOss) {
+                    const gptModel = installedModels.find(n => n.includes('gpt-oss'));
+                    suggestion += 'You have ' + gptModel + ' installed — enter that as your model name.';
+                } else {
+                    suggestion += 'Run: ollama pull ' + modelName;
+                }
+                return { ok: false, error: suggestion };
+            }
+
+            // Check for gpt-oss and suggest it if they're using something else
+            let gptOssSuggestion = null;
+            if (!modelBase.includes('gpt-oss')) {
+                const gptOssModel = installedModels.find(n => n.includes('gpt-oss'));
+                if (gptOssModel) {
+                    gptOssSuggestion = gptOssModel;
+                }
+            }
+
+            return { ok: true, model: modelName, installedModels, gptOssSuggestion };
+        }
+
+        if (apiMode === 'custom') {
+            const base = (baseUrl || '').replace(/\/+$/, '');
+            if (!base) {
+                return { ok: false, error: 'Please enter a Base URL in API Settings.' };
+            }
+            // Quick connectivity check
+            try {
+                const resp = await fetch(`${base}/models`, {
+                    headers: apiKey ? { 'Authorization': `Bearer ${apiKey}` } : {}
+                });
+                if (!resp.ok && resp.status === 401) {
+                    return { ok: false, error: 'Invalid API key for custom endpoint.' };
+                }
+            } catch {
+                return {
+                    ok: false,
+                    error: 'Cannot connect to ' + base + '.\nCheck the URL is correct and the server is running.'
+                };
+            }
+            return { ok: true };
+        }
+
+        return { ok: true };
+    }
+
+    return { generatePrompt, preflightCheck, PROVIDERS };
 })();

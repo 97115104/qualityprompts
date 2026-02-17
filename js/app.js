@@ -64,6 +64,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Puter fallback modal
+    document.getElementById('btn-close-fallback').addEventListener('click', () => {
+        document.getElementById('puter-fallback-modal').classList.add('hidden');
+    });
+    document.getElementById('puter-fallback-modal').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) {
+            document.getElementById('puter-fallback-modal').classList.add('hidden');
+        }
+    });
+    document.getElementById('btn-switch-ollama').addEventListener('click', () => {
+        document.getElementById('puter-fallback-modal').classList.add('hidden');
+        document.getElementById('api-mode').value = 'ollama';
+        updateApiModeUI();
+        document.getElementById('settings-panel').classList.remove('hidden');
+        document.getElementById('settings-toggle').textContent = '\u25BC API Settings';
+    });
+
     // Settings toggle
     document.getElementById('settings-toggle').addEventListener('click', () => {
         const panel = document.getElementById('settings-panel');
@@ -439,6 +456,18 @@ function saveSettings() {
     }
 }
 
+function updateLoadingStatus(text, status) {
+    const textEl = document.getElementById('loading-text');
+    const statusEl = document.getElementById('loading-status');
+    if (text) textEl.textContent = text;
+    if (status) statusEl.textContent = status;
+}
+
+function showPuterFallback(reason) {
+    document.getElementById('puter-fallback-reason').textContent = reason;
+    document.getElementById('puter-fallback-modal').classList.remove('hidden');
+}
+
 async function handleGenerate() {
     const apiMode = document.getElementById('api-mode').value;
     const subjectType = document.getElementById('subject-type').value;
@@ -467,13 +496,58 @@ async function handleGenerate() {
     // Save settings
     saveSettings();
 
-    // Build meta-prompt
-    const { system, user } = PromptEngine.buildMetaPrompt(subjectType, idea, modelType, subType);
+    // Build params
+    const params = {
+        systemMessage: null,
+        userMessage: null,
+        apiMode
+    };
+
+    if (apiMode === 'puter') {
+        params.puterModel = document.getElementById('puter-model').value;
+    } else if (apiMode === 'ollama') {
+        params.ollamaUrl = document.getElementById('ollama-url').value.trim() || undefined;
+        params.ollamaModel = document.getElementById('ollama-model').value.trim() || undefined;
+    } else {
+        params.apiKey = document.getElementById('api-key').value.trim();
+        params.model = document.getElementById('model-name').value.trim() || undefined;
+        if (apiMode === 'custom') {
+            params.baseUrl = document.getElementById('base-url').value.trim() || undefined;
+        }
+    }
 
     // Show loading, hide share idea row
     UIRenderer.showLoading();
     document.getElementById('generate-btn').disabled = true;
     document.getElementById('share-idea-row').classList.add('hidden');
+
+    // Preflight check for local/custom endpoints
+    if (apiMode === 'ollama' || apiMode === 'custom') {
+        updateLoadingStatus('Checking connection...', 'Verifying ' + (apiMode === 'ollama' ? 'Ollama' : 'endpoint') + ' is reachable');
+
+        const check = await ApiClient.preflightCheck(params);
+        if (!check.ok) {
+            UIRenderer.showError(check.error);
+            document.getElementById('generate-btn').disabled = false;
+            document.getElementById('share-idea-row').classList.remove('hidden');
+            return;
+        }
+
+        // If they have gpt-oss installed but aren't using it, suggest it
+        if (check.gptOssSuggestion && apiMode === 'ollama') {
+            updateLoadingStatus('Connected to Ollama', 'Tip: You have ' + check.gptOssSuggestion + ' installed — consider using it for best results');
+            await new Promise(r => setTimeout(r, 1500));
+        } else {
+            updateLoadingStatus('Connected', 'Model verified — building prompt');
+            await new Promise(r => setTimeout(r, 500));
+        }
+    }
+
+    // Build meta-prompt
+    updateLoadingStatus('Sending request...', 'Building optimized prompt for ' + (apiMode === 'puter' ? 'Puter' : apiMode === 'ollama' ? 'Ollama' : apiMode));
+    const { system, user } = PromptEngine.buildMetaPrompt(subjectType, idea, modelType, subType);
+    params.systemMessage = system;
+    params.userMessage = user;
 
     // Start slow-hint timer (show after 10 seconds if still loading)
     document.getElementById('slow-hint').classList.add('hidden');
@@ -485,34 +559,28 @@ async function handleGenerate() {
         }
     }, 10000);
 
-    try {
-        const params = {
-            systemMessage: system,
-            userMessage: user,
-            apiMode
-        };
-
-        if (apiMode === 'puter') {
-            params.puterModel = document.getElementById('puter-model').value;
-        } else if (apiMode === 'ollama') {
-            params.ollamaUrl = document.getElementById('ollama-url').value.trim() || undefined;
-            params.ollamaModel = document.getElementById('ollama-model').value.trim() || undefined;
-        } else {
-            params.apiKey = document.getElementById('api-key').value.trim();
-            params.model = document.getElementById('model-name').value.trim() || undefined;
-            if (apiMode === 'custom') {
-                params.baseUrl = document.getElementById('base-url').value.trim() || undefined;
-            }
+    // Short delay then update status
+    setTimeout(() => {
+        const loadingSection = document.getElementById('loading-section');
+        if (!loadingSection.classList.contains('hidden')) {
+            updateLoadingStatus('Generating your prompt...', 'Waiting for model response');
         }
+    }, 1500);
 
+    try {
         const result = await ApiClient.generatePrompt(params);
         UIRenderer.renderOutput(result);
     } catch (err) {
+        if (err.puterFallback) {
+            showPuterFallback(err.message);
+        }
         UIRenderer.showError(err.message);
     } finally {
         clearTimeout(slowHintTimer);
         document.getElementById('slow-hint').classList.add('hidden');
         document.getElementById('generate-btn').disabled = false;
         document.getElementById('share-idea-row').classList.remove('hidden');
+        // Reset loading text for next time
+        updateLoadingStatus('Generating your prompt...', 'Analyzing subject type, optimizing for target model');
     }
 }
