@@ -8,19 +8,24 @@ Transform simple ideas into high-quality, production-ready prompts optimized for
 - **Prompt styles for every category** — Each subject type has specialized sub-types that adapt the prompt for specific workflows (PRDs, diagnostic debugging, photo editing, campaign planning, and more)
 - **Subject-type instructions (STI)** — Each subject type carries a domain-specific system role that tunes the prompt engineer persona for the subject at hand, producing higher-quality output than a generic role
 - **Model-aware generation** — Adjusts verbosity, reasoning depth, and constraints for Frontier, LLM, SLM, Paid/Premium, and Open-source models
-- **Multi-provider support** — Puter (free), OpenRouter, Anthropic, OpenAI, Google Gemini, and any OpenAI-compatible custom endpoint
+- **Multi-provider support** — Puter (free), OpenRouter, Anthropic, OpenAI, Google Gemini, Ollama (local), and any OpenAI-compatible custom endpoint
 - **Multiple output formats** — Plain text, structured markdown, and JSON for agent/API ingestion
 - **Fully serverless** — Runs entirely in the browser with no backend required
-- **Copy and download** — One-click copy or download for each format
+- **Share Idea** — Share a prefilled URL of your idea, with or without auto-generate, via a share modal
+- **Use this prompt** — Open the generated prompt directly in ChatGPT, Claude, Copilot, or Gemini
+- **Copy, download, and email** — One-click copy, download, or share the generated prompt via email
+- **URL routing** — Prefill prompts via query parameters and optionally auto-generate on page load
+- **Smart loading UX** — Slow-generation hint with one-click guidance for switching to a faster model
 
 ## How It Works
 
 1. Select an API provider (Puter GPT-OSS is free and requires no key)
 2. Select a subject type and optionally a prompt style
 3. Select a target model class
-4. Type a simple idea or concept
-5. Click **Generate Prompt**
-6. Get back an optimized prompt in three formats
+4. Type a simple idea or concept (or prefill via URL with `?prompt=`)
+5. Optionally click **Share Idea** to share a prefilled link before generating
+6. Click **Generate Prompt**
+7. Get back an optimized prompt in three formats — copy, download, email, or open directly in ChatGPT, Claude, Copilot, or Gemini
 
 The tool sends your idea to a language model along with subject-specific scaffolds, a domain-tuned system role, prompt style context, and model-specific constraints. The model returns a structured, production-ready prompt with evaluation criteria, deliverables, and edge case handling.
 
@@ -280,7 +285,8 @@ curl -X POST https://api.openai.com/v1/chat/completions \
 | Anthropic | `anthropic` | `https://api.anthropic.com/v1` | `x-api-key` | With header | Uses Messages API format. Requires `anthropic-dangerous-direct-browser-access` header. |
 | OpenAI | `openai` | `https://api.openai.com/v1` | `Authorization: Bearer` | No | Uses Chat Completions format. Requires CORS proxy for browser use. |
 | Google Gemini | `google` | `https://generativelanguage.googleapis.com/v1beta` | API key in URL | Yes | Uses Gemini generateContent format. |
-| Custom | `custom` | User-defined | `Authorization: Bearer` | Varies | Any OpenAI-compatible endpoint (Together, Ollama, LM Studio, etc.). |
+| Ollama | `ollama` | `http://localhost:11434` | None required | Requires `OLLAMA_ORIGINS=*` | Local models. No API key, no data leaves your machine. |
+| Custom | `custom` | User-defined | `Authorization: Bearer` | Varies | Any OpenAI-compatible endpoint (Together, LM Studio, etc.). |
 
 #### Provider-specific request formats
 
@@ -326,6 +332,80 @@ curl -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0
 
 Response: `candidates[0].content.parts[0].text` contains the JSON output.
 
+**Ollama** uses its OpenAI-compatible endpoint (requires `OLLAMA_ORIGINS=*` for browser access):
+
+```bash
+curl -X POST http://localhost:11434/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "llama3.2",
+    "messages": [
+      { "role": "system", "content": "<system message>" },
+      { "role": "user", "content": "<user message>" }
+    ],
+    "temperature": 0.7,
+    "stream": false
+  }'
+```
+
+Response: Same as OpenAI format — `choices[0].message.content` contains the JSON output. No API key required.
+
+## URL Routing
+
+Quality Prompts supports prefilling the prompt idea via URL query parameters. This is useful for sharing specific prompts, bookmarking common workflows, or integrating with other tools.
+
+### Prefill a prompt
+
+Add `?prompt=` with your URL-encoded idea:
+
+```
+https://yourdomain.com/qualityprompts/?prompt=Build%20a%20dashboard%20that%20tracks%20user%20retention%20by%20cohort
+```
+
+The bare `?=` format also works:
+
+```
+https://yourdomain.com/qualityprompts/?=Build%20a%20dashboard%20that%20tracks%20user%20retention%20by%20cohort
+```
+
+Both formats prefill the idea input field without generating.
+
+### Auto-generate on load
+
+Add `&enter` to automatically trigger generation when the page loads:
+
+```
+https://yourdomain.com/qualityprompts/?prompt=Build%20a%20dashboard%20that%20tracks%20user%20retention%20by%20cohort&enter
+```
+
+This prefills the idea and immediately starts generating using the user's current API settings (defaults to Puter GPT-OSS).
+
+## Sharing and Using Prompts
+
+### Share Idea
+
+The **Share Idea** button (above Generate Prompt) opens a modal with two options:
+
+- **Copy link** — copies a prefilled URL (`?prompt=...`) that prefills the idea for the recipient
+- **Copy link with auto-generate** — copies a prefilled URL with `&enter` that also triggers generation automatically on page load
+
+### Use This Prompt
+
+After generating a prompt, the **Use this prompt** section at the bottom of the output provides one-click buttons to open the prompt in:
+
+| Service | Behavior |
+|---------|----------|
+| ChatGPT | Opens with the prompt prefilled via `?q=` parameter |
+| Claude | Copies prompt to clipboard, opens claude.ai/new — paste to use |
+| Copilot | Copies prompt to clipboard, opens copilot.microsoft.com — paste to use |
+| Gemini | Copies prompt to clipboard, opens gemini.google.com — paste to use |
+
+For Claude, Copilot, and Gemini, a brief modal confirms the prompt was copied and reminds you to paste it when the page opens.
+
+### Share via Email
+
+The **Share via Email** button on the Plain Text tab sends the full generated prompt by email with a link back to Quality Prompts.
+
 ## Deployment (GitHub Pages)
 
 1. Fork or clone this repository
@@ -346,7 +426,7 @@ qualityprompts/
 ├── js/
 │   ├── app.js          # Workflow orchestration and UI event handling
 │   ├── promptEngine.js # Subject scaffolds, sub-types, STI roles, model constraints, meta-prompt builder
-│   ├── apiClient.js    # Multi-provider API client (Puter, OpenRouter, Anthropic, OpenAI, Google, Custom)
+│   ├── apiClient.js    # Multi-provider API client (Puter, OpenRouter, Anthropic, OpenAI, Google, Ollama, Custom)
 │   └── uiRenderer.js   # DOM rendering and interactions
 ├── LICENSE             # MIT License
 ├── ATTESTATION.md      # AI collaboration disclosure
@@ -357,10 +437,16 @@ qualityprompts/
 
 - Pure HTML, CSS, and JavaScript — no frameworks or build tools
 - API key stored in-session or optionally in localStorage
-- Six built-in API providers with native request format handling per provider
+- Seven built-in API providers with native request format handling per provider
 - Puter and OpenRouter work directly in the browser without CORS issues
+- Ollama works locally with `OLLAMA_ORIGINS=*` — no API key, no data leaves your machine
 - Anthropic, OpenAI, and Google require either CORS proxies or non-browser usage
 - Custom endpoint supports any OpenAI-compatible API with configurable base URL
+- URL routing supports `?prompt=`, bare `?=`, and `&enter` for auto-generation
+- Share Idea modal with copy link and copy link with auto-generate options
+- Use this prompt buttons open generated prompts directly in ChatGPT, Claude, Copilot, and Gemini
+- Share via Email on the plain text tab sends the full generated prompt
+- Slow-generation hint appears after 10 seconds with a link to a modal explaining how to switch to a faster model
 - Sub-type system is extensible, add `subTypes` to any subject scaffold in `promptEngine.js`
 - STI system roles are per-subject — modify `systemRole` on any scaffold to tune the prompt engineer persona
 

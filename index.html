@@ -50,18 +50,29 @@
 
                 <h4>API providers</h4>
                 <p>Quality Prompts supports multiple API providers. Select your provider in the API Settings panel and enter your API key.</p>
-                <p><strong>Puter GPT-OSS</strong> is the default and is completely free with no API key required. It runs through the Puter SDK and works directly in the browser.</p>
+                <p><strong>Puter GPT-OSS</strong> is the default and is completely free with no API key required. It uses Puter's user-pays model, which means you as a developer or site owner pay nothing. Instead, each person who uses the tool covers their own AI inference cost through their Puter account. When a user first triggers an AI request, Puter handles authentication automatically. Users get a free usage allowance, and any usage beyond that is billed to their own Puter account, not yours. This means the tool can scale to unlimited users at zero cost to the host. The gpt-oss-120b model (117B parameters) produces the best results but is slower. The gpt-oss-20b model (21B parameters) is faster with lower quality. Both are open-weight models from OpenAI running on Puter's infrastructure.</p>
                 <p><strong>OpenRouter</strong> is recommended for users who want access to hundreds of models (Claude, GPT, Gemini, Llama, Mistral, and more) through a single API key. It is CORS-friendly and works directly in the browser without a proxy. Get a key at openrouter.ai/keys.</p>
                 <p><strong>Anthropic</strong> connects directly to the Claude Messages API. Get a key at console.anthropic.com.</p>
                 <p><strong>OpenAI</strong> connects to the Chat Completions API. Get a key at platform.openai.com.</p>
                 <p><strong>Google Gemini</strong> connects to the Gemini API. Get a key at aistudio.google.com.</p>
-                <p><strong>Custom Endpoint</strong> supports any OpenAI-compatible API including Together, Ollama, LM Studio, and self-hosted models. Enter your base URL and it uses the /chat/completions format with Bearer token auth.</p>
+                <p><strong>Ollama</strong> runs AI models locally on your machine. No API key needed, no data leaves your computer, completely free. Select Ollama (Local) as the provider, make sure Ollama is running with CORS enabled (<code>OLLAMA_ORIGINS=* ollama serve</code>), and enter the model name you've pulled. Click Setup Instructions in the Ollama settings for a full guide.</p>
+                <p><strong>Custom Endpoint</strong> supports any OpenAI-compatible API including Together, LM Studio, and other self-hosted models. Enter your base URL and it uses the /chat/completions format with Bearer token auth.</p>
 
                 <h4>Tips for best results</h4>
                 <p>Keep your idea brief. The whole point of this tool is to do the heavy lifting for you, so you do not need to write a full prompt yourself. Focus on what you want accomplished, not on how to prompt for it. The more specific your idea is, the better the output will be. For example, "build a dashboard that tracks user retention by cohort" will produce a much better prompt than just "build a dashboard."</p>
 
+                <h4>Sharing and using your prompt</h4>
+                <p>The <strong>Share Idea</strong> button (above Generate Prompt) opens a modal where you can copy a prefilled URL of your idea. Choose "Copy link" to share a URL that prefills the idea for the recipient, or "Copy link with auto-generate" to share a URL that also triggers prompt generation automatically when opened.</p>
+
+                <p>Once a prompt is generated, the <strong>Use this prompt</strong> section at the bottom lets you open the generated prompt directly in ChatGPT, Claude, Copilot, or Gemini. ChatGPT receives the prompt automatically. For Claude, Copilot, and Gemini, the prompt is copied to your clipboard and the service opens in a new tab — just paste it when the page loads.</p>
+
+                <p>You can also <strong>Share via Email</strong> from the Plain Text tab to send the full generated prompt by email.</p>
+
                 <h4>Output formats</h4>
                 <p>The Plain Text tab gives you a clean, readable prompt you can paste directly into any chat interface. The Structured tab formats the same prompt with markdown headings, sections, and bullet points for easy scanning. The JSON tab provides a programmatic format with separate fields for system instructions, user prompts, constraints, and evaluation criteria, which is useful for agents and API integrations.</p>
+
+                <h4>URL routing</h4>
+                <p>You can prefill the idea input via URL. Add <code>?prompt=your idea here</code> to the URL to prefill, or add <code>&amp;enter</code> to also auto-generate the prompt on page load. The bare format <code>?=your idea here</code> also works. This is useful for bookmarks, integrations, and the Share Idea feature.</p>
 
                 <p>All processing happens through the selected API provider. No data is stored on any server.</p>
             </div>
@@ -85,6 +96,7 @@
                     <option value="anthropic">Anthropic Claude</option>
                     <option value="openai">OpenAI</option>
                     <option value="google">Google Gemini</option>
+                    <option value="ollama">Ollama (Local)</option>
                     <option value="custom">Custom Endpoint</option>
                 </select>
             </div>
@@ -100,6 +112,70 @@
                     </select>
                 </div>
                 <p class="settings-hint">Powered by Puter.com — free, no API key needed.</p>
+            </div>
+
+            <!-- Ollama Settings (local, no key needed) -->
+            <div id="ollama-settings" class="provider-settings hidden">
+                <div class="form-group">
+                    <label for="ollama-url">Ollama URL</label>
+                    <input type="text" id="ollama-url" value="http://localhost:11434" placeholder="http://localhost:11434">
+                </div>
+                <div class="form-group">
+                    <label for="ollama-model">Model</label>
+                    <input type="text" id="ollama-model" placeholder="llama3.2" value="llama3.2">
+                </div>
+                <div class="ollama-hint-row">
+                    <p class="settings-hint">Runs locally on your machine — no API key, no data leaves your computer.</p>
+                    <button type="button" id="btn-ollama-help" class="btn-small">Setup Instructions</button>
+                </div>
+            </div>
+
+            <!-- Ollama Instructions Modal -->
+            <div id="ollama-modal" class="modal-overlay hidden">
+                <div class="modal">
+                    <div class="modal-header">
+                        <h3>Running Quality Prompts with Ollama</h3>
+                        <button id="btn-close-ollama" class="btn-modal-close">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Ollama lets you run AI models locally on your own machine. No API key needed, no data leaves your computer, and it's completely free.</p>
+
+                        <h4>1. Install Ollama</h4>
+                        <p>Download and install from <strong>ollama.com</strong>. Available for macOS, Linux, and Windows.</p>
+
+                        <h4>2. Pull a model</h4>
+                        <p>Open your terminal and run:</p>
+                        <pre style="background:#1e1e1e;color:#d4d4d4;padding:12px;border-radius:6px;font-size:13px;">ollama pull llama3.2</pre>
+                        <p>Other recommended models for prompt generation:</p>
+                        <ul>
+                            <li><strong>llama3.2</strong> — 3B params, fast, good for most tasks</li>
+                            <li><strong>llama3.1:8b</strong> — 8B params, better quality</li>
+                            <li><strong>mistral</strong> — 7B params, strong instruction following</li>
+                            <li><strong>qwen2.5:14b</strong> — 14B params, excellent for structured output</li>
+                            <li><strong>gemma2:9b</strong> — 9B params, good balance of speed and quality</li>
+                        </ul>
+
+                        <h4>3. Start Ollama with CORS enabled</h4>
+                        <p>Quality Prompts runs in your browser, so Ollama needs to allow cross-origin requests. Start it with:</p>
+                        <pre style="background:#1e1e1e;color:#d4d4d4;padding:12px;border-radius:6px;font-size:13px;">OLLAMA_ORIGINS=* ollama serve</pre>
+                        <p>On Windows (PowerShell):</p>
+                        <pre style="background:#1e1e1e;color:#d4d4d4;padding:12px;border-radius:6px;font-size:13px;">$env:OLLAMA_ORIGINS="*"; ollama serve</pre>
+                        <p>If Ollama is already running (e.g. the desktop app), you'll need to stop it first and restart with the CORS flag, or set the environment variable permanently.</p>
+
+                        <h4>4. Configure Quality Prompts</h4>
+                        <ol>
+                            <li>Select <strong>Ollama (Local)</strong> as the API Provider</li>
+                            <li>The URL defaults to <strong>http://localhost:11434</strong> — change it if you're using a different port</li>
+                            <li>Enter the model name you pulled (e.g. <strong>llama3.2</strong>)</li>
+                            <li>Click <strong>Generate Prompt</strong></li>
+                        </ol>
+
+                        <h4>Troubleshooting</h4>
+                        <p><strong>CORS error / Failed to fetch:</strong> Make sure Ollama is running with <code>OLLAMA_ORIGINS=*</code>. The default Ollama server blocks browser requests without this.</p>
+                        <p><strong>Connection refused:</strong> Make sure Ollama is running (<code>ollama serve</code>) and check that the URL and port are correct.</p>
+                        <p><strong>Model not found:</strong> Run <code>ollama list</code> to see installed models, and make sure the model name matches exactly.</p>
+                    </div>
+                </div>
             </div>
 
             <!-- Shared fields for all key-based providers -->
@@ -151,7 +227,28 @@
             <div id="char-limit-hint" class="char-limit-hint hidden">You're at the limit. Remember, the point of this tool is to build the detailed prompt for you — just describe your idea briefly and let Quality Prompts do the rest.</div>
         </div>
 
+        <div id="share-idea-row" class="share-idea-row">
+            <button id="btn-share-idea" class="btn-small">Share Idea</button>
+        </div>
         <button id="generate-btn" class="btn-primary">Generate Prompt</button>
+
+        <!-- Share Idea Modal -->
+        <div id="share-modal" class="modal-overlay hidden">
+            <div class="modal modal-small">
+                <div class="modal-header">
+                    <h3>Share Idea</h3>
+                    <button id="btn-close-share" class="btn-modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Share your idea as a prefilled Quality Prompts link.</p>
+                    <div class="share-options">
+                        <button id="share-url" class="btn-share-option">Copy link</button>
+                        <button id="share-url-enter" class="btn-share-option">Copy link with auto-generate</button>
+                    </div>
+                    <div id="share-status" class="share-status hidden"></div>
+                </div>
+            </div>
+        </div>
 
         <!-- Error -->
         <div id="error-section" class="error-message hidden"></div>
@@ -161,6 +258,28 @@
             <div class="spinner"></div>
             <div class="loading-text">Generating your prompt...</div>
             <div class="loading-status">Analyzing subject type, optimizing for target model</div>
+            <div id="slow-hint" class="slow-hint hidden">
+                Taking too long? <a href="#" id="slow-hint-link">Try a faster model</a>
+            </div>
+        </div>
+
+        <!-- Speed Tip Modal -->
+        <div id="speed-modal" class="modal-overlay hidden">
+            <div class="modal modal-small">
+                <div class="modal-header">
+                    <h3>Switch to a faster model</h3>
+                    <button id="btn-close-speed" class="btn-modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>The gpt-oss-120b model (117B parameters) produces the highest quality prompts but can take 30-60 seconds to respond. If speed is more important than quality, switch to the smaller model:</p>
+                    <ol>
+                        <li>Click <strong>API Settings</strong> at the top of the page</li>
+                        <li>Under <strong>Model</strong>, select <strong>gpt-oss-20b (21B params, faster)</strong></li>
+                        <li>Click <strong>Generate Prompt</strong> again</li>
+                    </ol>
+                    <p>The 20b model is roughly 2-3x faster with slightly lower quality. Both models are free through Puter.</p>
+                </div>
+            </div>
         </div>
 
         <!-- Output -->
@@ -180,6 +299,7 @@
                 <div class="btn-row">
                     <button class="btn-small btn-copy" data-target="plain-content">Copy</button>
                     <button class="btn-small btn-download" data-target="plain-content" data-format="txt">Download .txt</button>
+                    <button class="btn-small" id="btn-share-email">Share via Email</button>
                 </div>
             </div>
 
@@ -208,6 +328,24 @@
             </div>
 
             <div id="token-estimate" class="token-estimate hidden"></div>
+
+            <!-- Open in model buttons -->
+            <div class="open-in-section">
+                <h4>Use this prompt</h4>
+                <div class="open-in-row">
+                    <button class="btn-open-in btn-chatgpt" data-service="chatgpt">Open in ChatGPT</button>
+                    <button class="btn-open-in btn-claude" data-service="claude">Open in Claude</button>
+                    <button class="btn-open-in btn-copilot" data-service="copilot">Open in Copilot</button>
+                    <button class="btn-open-in btn-gemini" data-service="gemini">Open in Gemini</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clipboard toast modal -->
+    <div id="clipboard-modal" class="clipboard-modal hidden">
+        <div class="clipboard-modal-content">
+            <p id="clipboard-modal-text"></p>
         </div>
     </div>
 

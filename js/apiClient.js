@@ -24,6 +24,11 @@ const ApiClient = (() => {
             baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
             defaultModel: 'gemini-2.0-flash'
         },
+        ollama: {
+            label: 'Ollama (Local)',
+            baseUrl: 'http://localhost:11434',
+            defaultModel: 'llama3.2'
+        },
         custom: {
             label: 'Custom Endpoint',
             baseUrl: 'https://api.openai.com/v1',
@@ -31,9 +36,14 @@ const ApiClient = (() => {
         }
     };
 
-    async function generatePrompt({ apiKey, baseUrl, model, systemMessage, userMessage, apiMode, puterModel }) {
+    async function generatePrompt({ apiKey, baseUrl, model, systemMessage, userMessage, apiMode, puterModel, ollamaUrl, ollamaModel }) {
         if (apiMode === 'puter') {
             return callPuterApi({ model: puterModel || PROVIDERS.puter.defaultModel, systemMessage, userMessage });
+        }
+        if (apiMode === 'ollama') {
+            const base = (ollamaUrl || PROVIDERS.ollama.baseUrl).replace(/\/+$/, '');
+            const modelName = ollamaModel || PROVIDERS.ollama.defaultModel;
+            return callOllamaApi({ base, modelName, systemMessage, userMessage });
         }
 
         const provider = PROVIDERS[apiMode] || PROVIDERS.custom;
@@ -70,19 +80,83 @@ const ApiClient = (() => {
                 { model }
             );
         } catch (err) {
-            const msg = err?.message || err?.toString?.() || JSON.stringify(err);
+            // Extract a readable message from Puter's error object
+            const msg = err?.message
+                || err?.error?.message
+                || err?.error?.code
+                || err?.code
+                || (typeof err === 'string' ? err : null)
+                || JSON.stringify(err);
+
+            const code = err?.error?.code || err?.code || '';
+            const status = err?.error?.status || err?.status || 0;
+
+            // Rate limit / usage exceeded
+            if (code === 'rate_limit_exceeded' || status === 429
+                || msg.includes('rate_limit') || msg.includes('rate limit')
+                || msg.includes('quota') || msg.includes('insufficient')) {
+                throw new Error(
+                    'Puter usage limit reached. Puter gives each user a free allowance for AI requests. ' +
+                    'You may have exceeded your free tier. Options:\n' +
+                    '1. Wait a few minutes and try again\n' +
+                    '2. Switch to a smaller model (gpt-oss-20b) in API Settings\n' +
+                    '3. Try a different API provider (OpenRouter, Anthropic, etc.)'
+                );
+            }
+
+            // Authentication / session issues
+            if (code === 'auth_error' || code === 'unauthorized' || status === 401
+                || msg.includes('auth') || msg.includes('login') || msg.includes('sign in')
+                || msg.includes('session') || msg.includes('token_expired')) {
+                throw new Error(
+                    'Puter authentication error. Your session may have expired. ' +
+                    'Try refreshing the page — Puter will prompt you to sign in again.'
+                );
+            }
+
+            // Content filter
             if (msg.includes('content_filter') || msg.includes('moderation') || msg.includes('flagged')) {
                 throw new Error(
                     'Content was flagged by the model\'s safety filter. ' +
                     'Try rephrasing sensitive content or using a different model.'
                 );
             }
-            if (msg.includes('context_length') || msg.includes('too long') || msg.includes('token')) {
+
+            // Context length
+            if (msg.includes('context_length') || msg.includes('too long') || msg.includes('max_tokens')) {
                 throw new Error(
                     'Prompt is too long for this model. Try shortening your idea or switching to gpt-oss-120b.'
                 );
             }
-            throw new Error(`Puter API error: ${msg}`);
+
+            // Model not found
+            if (code === 'model_not_found' || status === 404 || msg.includes('not found') || msg.includes('invalid model')) {
+                throw new Error(
+                    'The selected Puter model was not found. It may have been deprecated. ' +
+                    'Try selecting a different model in API Settings.'
+                );
+            }
+
+            // Service unavailable
+            if (status === 503 || status === 502 || msg.includes('unavailable') || msg.includes('overloaded')) {
+                throw new Error(
+                    'Puter\'s AI service is temporarily unavailable or overloaded. ' +
+                    'Wait a minute and try again, or switch to a different API provider.'
+                );
+            }
+
+            // Timeout
+            if (msg.includes('timeout') || msg.includes('timed out') || code === 'timeout') {
+                throw new Error(
+                    'The request timed out. The gpt-oss-120b model can take 30-60 seconds. ' +
+                    'Try again, or switch to gpt-oss-20b for faster responses.'
+                );
+            }
+
+            throw new Error(
+                'Puter API error: ' + msg + '\n\n' +
+                'If this persists, try refreshing the page or switching to a different API provider in Settings.'
+            );
         }
 
         const content = response?.message?.content;
@@ -91,6 +165,62 @@ const ApiClient = (() => {
                 'No content returned from Puter API. The model may have refused the request. ' +
                 'Full response: ' + JSON.stringify(response).substring(0, 300)
             );
+        }
+        return parseResponse(content);
+    }
+
+    // --- Ollama (Local) ---
+
+    async function callOllamaApi({ base, modelName, systemMessage, userMessage }) {
+        // Ollama exposes an OpenAI-compatible endpoint at /v1/chat/completions
+        const url = `${base}/v1/chat/completions`;
+
+        const body = {
+            model: modelName,
+            messages: [
+                { role: 'system', content: systemMessage },
+                { role: 'user', content: userMessage }
+            ],
+            temperature: 0.7,
+            stream: false
+        };
+
+        let response;
+        try {
+            response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+        } catch (err) {
+            if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
+                throw new Error(
+                    'Could not connect to Ollama. Common fixes:\n' +
+                    '1. Make sure Ollama is running: ollama serve\n' +
+                    '2. Enable CORS: OLLAMA_ORIGINS=* ollama serve\n' +
+                    '3. Check the URL is correct (default: http://localhost:11434)\n\n' +
+                    'Click "Setup Instructions" in the Ollama settings for full setup guide.'
+                );
+            }
+            throw new Error(`Ollama connection error: ${err.message}`);
+        }
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            const msg = errorData?.error?.message || errorData?.error || response.statusText;
+            if (response.status === 404) {
+                throw new Error(
+                    `Model "${modelName}" not found. Run: ollama pull ${modelName}\n` +
+                    'To see installed models: ollama list'
+                );
+            }
+            throw new Error(`Ollama error (${response.status}): ${msg}`);
+        }
+
+        const data = await response.json();
+        const content = data.choices?.[0]?.message?.content;
+        if (!content) {
+            throw new Error('No content returned from Ollama.');
         }
         return parseResponse(content);
     }

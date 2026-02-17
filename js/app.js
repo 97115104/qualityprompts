@@ -1,3 +1,5 @@
+let slowHintTimer = null;
+
 document.addEventListener('DOMContentLoaded', () => {
     // Detect file:// protocol — Puter SDK needs a web server
     if (window.location.protocol === 'file:') {
@@ -19,6 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
     UIRenderer.setupTabs();
     UIRenderer.setupCopyButtons();
     UIRenderer.setupDownloadButtons();
+    setupShareIdeaButton();
+    setupOpenInButtons();
 
     // How to use modal
     document.getElementById('btn-info').addEventListener('click', () => {
@@ -30,6 +34,33 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('info-modal').addEventListener('click', (e) => {
         if (e.target === e.currentTarget) {
             document.getElementById('info-modal').classList.add('hidden');
+        }
+    });
+
+    // Speed tip modal
+    document.getElementById('slow-hint-link').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById('speed-modal').classList.remove('hidden');
+    });
+    document.getElementById('btn-close-speed').addEventListener('click', () => {
+        document.getElementById('speed-modal').classList.add('hidden');
+    });
+    document.getElementById('speed-modal').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) {
+            document.getElementById('speed-modal').classList.add('hidden');
+        }
+    });
+
+    // Ollama instructions modal
+    document.getElementById('btn-ollama-help').addEventListener('click', () => {
+        document.getElementById('ollama-modal').classList.remove('hidden');
+    });
+    document.getElementById('btn-close-ollama').addEventListener('click', () => {
+        document.getElementById('ollama-modal').classList.add('hidden');
+    });
+    document.getElementById('ollama-modal').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) {
+            document.getElementById('ollama-modal').classList.add('hidden');
         }
     });
 
@@ -80,9 +111,170 @@ document.addEventListener('DOMContentLoaded', () => {
             handleGenerate();
         }
     });
+
+    // URL routing — prefill and auto-generate from query params
+    handleUrlRouting();
 });
 
-// Provider configuration — placeholders, hints, and field visibility
+// --- URL Routing ---
+
+function handleUrlRouting() {
+    const params = new URLSearchParams(window.location.search);
+
+    // Support ?prompt=... or the bare ?=... format
+    let prompt = params.get('prompt');
+    if (!prompt) {
+        // Check for bare ?=value format (key is empty string)
+        const raw = window.location.search;
+        if (raw.startsWith('?=')) {
+            prompt = decodeURIComponent(raw.substring(2).split('&')[0]);
+        }
+    }
+
+    if (!prompt) return;
+
+    // Prefill the idea input
+    const ideaInput = document.getElementById('idea-input');
+    ideaInput.value = prompt;
+    // Update char counter
+    const charCount = document.getElementById('char-count');
+    charCount.textContent = prompt.length.toLocaleString();
+
+    // Check for auto-enter
+    const autoEnter = params.get('enter');
+    const rawSearch = window.location.search;
+    const hasEnter = autoEnter !== null || rawSearch.includes('&enter') || rawSearch.includes('?enter');
+
+    if (hasEnter) {
+        // Small delay to let Puter SDK initialize
+        setTimeout(() => handleGenerate(), 500);
+    }
+}
+
+// --- Share Buttons ---
+
+function setupShareIdeaButton() {
+    const shareModal = document.getElementById('share-modal');
+
+    // Open modal
+    document.getElementById('btn-share-idea').addEventListener('click', () => {
+        const idea = document.getElementById('idea-input').value.trim();
+        if (!idea) {
+            UIRenderer.showError('Enter an idea first, then share it.');
+            return;
+        }
+        document.getElementById('share-status').classList.add('hidden');
+        shareModal.classList.remove('hidden');
+    });
+
+    // Close modal
+    document.getElementById('btn-close-share').addEventListener('click', () => {
+        shareModal.classList.add('hidden');
+    });
+    shareModal.addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) {
+            shareModal.classList.add('hidden');
+        }
+    });
+
+    function buildShareUrl(includeEnter) {
+        const idea = document.getElementById('idea-input').value.trim();
+        const base = window.location.origin + window.location.pathname;
+        let link = base + '?prompt=' + encodeURIComponent(idea);
+        if (includeEnter) link += '&enter';
+        return link;
+    }
+
+    function showShareStatus(text) {
+        const status = document.getElementById('share-status');
+        status.textContent = text;
+        status.classList.remove('hidden');
+        setTimeout(() => { status.classList.add('hidden'); }, 2000);
+    }
+
+    // Copy link (no auto-generate)
+    document.getElementById('share-url').addEventListener('click', () => {
+        navigator.clipboard.writeText(buildShareUrl(false)).then(() => {
+            showShareStatus('Link copied!');
+        });
+    });
+
+    // Copy link with &enter
+    document.getElementById('share-url-enter').addEventListener('click', () => {
+        navigator.clipboard.writeText(buildShareUrl(true)).then(() => {
+            showShareStatus('Link copied with auto-generate!');
+        });
+    });
+
+    // Share via Email (on generated output)
+    document.getElementById('btn-share-email').addEventListener('click', () => {
+        const plainEl = document.getElementById('plain-content');
+        const text = plainEl.dataset.rawText || plainEl.textContent;
+        const pageUrl = window.location.origin + window.location.pathname;
+        const url = 'mailto:?subject=' + encodeURIComponent('Prompt from Quality Prompts')
+            + '&body=' + encodeURIComponent(text + '\n\n---\nGenerated with Quality Prompts: ' + pageUrl);
+        window.open(url, '_blank', 'noopener,noreferrer');
+    });
+}
+
+function setupOpenInButtons() {
+    document.querySelectorAll('.btn-open-in').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const service = btn.dataset.service;
+            const plainEl = document.getElementById('plain-content');
+            const prompt = plainEl.dataset.rawText || plainEl.textContent;
+
+            const services = {
+                chatgpt: {
+                    url: 'https://chatgpt.com/?q=' + encodeURIComponent(prompt),
+                    direct: true
+                },
+                claude: {
+                    url: 'https://claude.ai/new',
+                    label: 'Claude',
+                    direct: false
+                },
+                copilot: {
+                    url: 'https://copilot.microsoft.com/',
+                    label: 'Copilot',
+                    direct: false
+                },
+                gemini: {
+                    url: 'https://gemini.google.com/app',
+                    label: 'Gemini',
+                    direct: false
+                }
+            };
+
+            const config = services[service];
+            if (!config) return;
+
+            if (config.direct) {
+                window.open(config.url, '_blank', 'noopener,noreferrer');
+            } else {
+                // Copy prompt to clipboard, show toast, then open the service
+                navigator.clipboard.writeText(prompt).then(() => {
+                    showClipboardModal('Opening ' + config.label + ' — prompt copied to clipboard. Just paste it when the page opens.');
+                    setTimeout(() => {
+                        window.open(config.url, '_blank', 'noopener,noreferrer');
+                    }, 600);
+                });
+            }
+        });
+    });
+}
+
+function showClipboardModal(message) {
+    const modal = document.getElementById('clipboard-modal');
+    document.getElementById('clipboard-modal-text').textContent = message;
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 3500);
+}
+
+// --- Provider Configuration ---
+
 const PROVIDER_CONFIG = {
     puter: {
         // No keyed settings needed
@@ -122,16 +314,20 @@ const PROVIDER_CONFIG = {
 function updateApiModeUI() {
     const mode = document.getElementById('api-mode').value;
     const puterSettings = document.getElementById('puter-settings');
+    const ollamaSettings = document.getElementById('ollama-settings');
     const keyedSettings = document.getElementById('keyed-settings');
+
+    puterSettings.classList.add('hidden');
+    ollamaSettings.classList.add('hidden');
+    keyedSettings.classList.add('hidden');
 
     if (mode === 'puter') {
         puterSettings.classList.remove('hidden');
-        keyedSettings.classList.add('hidden');
+    } else if (mode === 'ollama') {
+        ollamaSettings.classList.remove('hidden');
     } else {
-        puterSettings.classList.add('hidden');
         keyedSettings.classList.remove('hidden');
 
-        // Configure the shared panel for this provider
         const config = PROVIDER_CONFIG[mode] || PROVIDER_CONFIG.custom;
         document.getElementById('api-key').placeholder = config.keyPlaceholder;
         document.getElementById('model-name').placeholder = config.modelPlaceholder;
@@ -162,7 +358,6 @@ function updateSubTypeDropdown() {
     const group = document.getElementById('sub-type-group');
     const select = document.getElementById('sub-type');
 
-    // Clear existing options (keep the "General" default)
     select.innerHTML = '<option value="">General</option>';
 
     if (subTypes.length > 0) {
@@ -213,6 +408,14 @@ function restoreSettings() {
     if (savedPuterModel) {
         document.getElementById('puter-model').value = savedPuterModel;
     }
+    const savedOllamaUrl = localStorage.getItem('qp_ollama_url');
+    const savedOllamaModel = localStorage.getItem('qp_ollama_model');
+    if (savedOllamaUrl) {
+        document.getElementById('ollama-url').value = savedOllamaUrl;
+    }
+    if (savedOllamaModel) {
+        document.getElementById('ollama-model').value = savedOllamaModel;
+    }
 }
 
 function saveSettings() {
@@ -221,7 +424,10 @@ function saveSettings() {
         localStorage.setItem('qp_api_mode', apiMode);
         localStorage.setItem('qp_puter_model', document.getElementById('puter-model').value);
 
-        if (apiMode !== 'puter') {
+        if (apiMode === 'ollama') {
+            localStorage.setItem('qp_ollama_url', document.getElementById('ollama-url').value);
+            localStorage.setItem('qp_ollama_model', document.getElementById('ollama-model').value);
+        } else if (apiMode !== 'puter') {
             localStorage.setItem('qp_api_key', document.getElementById('api-key').value);
             const baseUrl = document.getElementById('base-url').value;
             const modelName = document.getElementById('model-name').value;
@@ -243,7 +449,7 @@ async function handleGenerate() {
     // Validate
     UIRenderer.hideError();
 
-    if (apiMode !== 'puter') {
+    if (apiMode !== 'puter' && apiMode !== 'ollama') {
         const apiKey = document.getElementById('api-key').value.trim();
         if (!apiKey) {
             UIRenderer.showError('Please enter your API key in the settings panel.');
@@ -264,9 +470,20 @@ async function handleGenerate() {
     // Build meta-prompt
     const { system, user } = PromptEngine.buildMetaPrompt(subjectType, idea, modelType, subType);
 
-    // Show loading
+    // Show loading, hide share idea row
     UIRenderer.showLoading();
     document.getElementById('generate-btn').disabled = true;
+    document.getElementById('share-idea-row').classList.add('hidden');
+
+    // Start slow-hint timer (show after 10 seconds if still loading)
+    document.getElementById('slow-hint').classList.add('hidden');
+    clearTimeout(slowHintTimer);
+    slowHintTimer = setTimeout(() => {
+        const loadingSection = document.getElementById('loading-section');
+        if (!loadingSection.classList.contains('hidden')) {
+            document.getElementById('slow-hint').classList.remove('hidden');
+        }
+    }, 10000);
 
     try {
         const params = {
@@ -277,10 +494,12 @@ async function handleGenerate() {
 
         if (apiMode === 'puter') {
             params.puterModel = document.getElementById('puter-model').value;
+        } else if (apiMode === 'ollama') {
+            params.ollamaUrl = document.getElementById('ollama-url').value.trim() || undefined;
+            params.ollamaModel = document.getElementById('ollama-model').value.trim() || undefined;
         } else {
             params.apiKey = document.getElementById('api-key').value.trim();
             params.model = document.getElementById('model-name').value.trim() || undefined;
-            // Only custom endpoint uses base URL override
             if (apiMode === 'custom') {
                 params.baseUrl = document.getElementById('base-url').value.trim() || undefined;
             }
@@ -291,6 +510,9 @@ async function handleGenerate() {
     } catch (err) {
         UIRenderer.showError(err.message);
     } finally {
+        clearTimeout(slowHintTimer);
+        document.getElementById('slow-hint').classList.add('hidden');
         document.getElementById('generate-btn').disabled = false;
+        document.getElementById('share-idea-row').classList.remove('hidden');
     }
 }

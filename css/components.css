@@ -221,11 +221,182 @@
     color: #569cd6;
 }
 
+/* Open in model buttons */
+.open-in-section {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.open-in-section h4 {
+    margin: 0 0 12px 0;
+    color: #555;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.open-in-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.btn-open-in {
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+}
+
+.btn-open-in:hover {
+    background: #444;
+    transform: translateY(-1px);
+}
+
+.btn-open-in:active {
+    transform: translateY(0);
+}
+
+.btn-chatgpt,
+.btn-claude,
+.btn-copilot,
+.btn-gemini {
+    background: #999;
+}
+
+/* Clipboard toast modal */
+.clipboard-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    animation: fadeIn 0.2s ease;
+}
+
+.clipboard-modal-content {
+    background: #fff;
+    border-radius: 10px;
+    padding: 28px 32px;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    animation: slideUp 0.25s ease;
+}
+
+.clipboard-modal-content p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.6;
+    color: #333;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
 /* Section divider */
 .section-divider {
     border: none;
     border-top: 1px solid #eee;
     margin: 20px 0;
+}
+
+/* Slow loading hint */
+.slow-hint {
+    margin-top: 16px;
+    font-size: 13px;
+    color: #888;
+}
+
+.slow-hint a {
+    color: #555;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.slow-hint a:hover {
+    color: #333;
+}
+
+/* Small modal variant */
+.modal-small {
+    max-width: 480px;
+}
+
+/* Ollama settings hint row */
+.ollama-hint-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.ollama-hint-row .settings-hint {
+    margin: 0;
+    flex: 1;
+}
+
+/* Share idea row above generate button */
+.share-idea-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+/* Share modal options */
+.share-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.btn-share-option {
+    background: #999;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    font-size: 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+    text-align: left;
+}
+
+.btn-share-option:hover {
+    background: #444;
+}
+
+.share-status {
+    margin-top: 12px;
+    font-size: 13px;
+    color: #333;
+    font-weight: bold;
+}
+
+/* Share row wrapping */
+.btn-row {
+    flex-wrap: wrap;
+    align-items: center;
 }
 
 @media (max-width: 600px) {
@@ -236,5 +407,14 @@
 
     .btn-row {
         flex-direction: column;
+    }
+
+    .open-in-row {
+        flex-direction: column;
+    }
+
+    .btn-open-in {
+        width: 100%;
+        text-align: center;
     }
 }

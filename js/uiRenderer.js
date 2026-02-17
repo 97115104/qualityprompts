@@ -12,7 +12,11 @@ const UIRenderer = (() => {
     function showError(message) {
         hideLoading();
         const el = document.getElementById('error-section');
-        el.textContent = message;
+        el.innerHTML = '';
+        message.split('\n').forEach((line, i) => {
+            if (i > 0) el.appendChild(document.createElement('br'));
+            el.appendChild(document.createTextNode(line));
+        });
         el.classList.remove('hidden');
     }
 
