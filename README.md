@@ -8,6 +8,7 @@ Transform simple ideas into high-quality, production-ready prompts optimized for
 - **Prompt styles for every category** — Each subject type has specialized sub-types that adapt the prompt for specific workflows (PRDs, diagnostic debugging, photo editing, campaign planning, and more)
 - **Subject-type instructions (STI)** — Each subject type carries a domain-specific system role that tunes the prompt engineer persona for the subject at hand, producing higher-quality output than a generic role
 - **Model-aware generation** — Adjusts verbosity, reasoning depth, and constraints for Frontier, LLM, SLM, Paid/Premium, and Open-source models
+- **Multi-provider support** — Puter (free), OpenRouter, Anthropic, OpenAI, Google Gemini, and any OpenAI-compatible custom endpoint
 - **Multiple output formats** — Plain text, structured markdown, and JSON for agent/API ingestion
 - **Fully serverless** — Runs entirely in the browser with no backend required
 - **Copy and download** — One-click copy or download for each format
@@ -220,7 +221,7 @@ Send a standard chat completions request to any OpenAI-compatible endpoint:
 }
 ```
 
-This works with OpenAI, OpenRouter, Anthropic (via OpenAI-compatible proxy), or any endpoint that accepts the chat completions format.
+This example uses the OpenAI chat completions format. See the Supported API Providers section below for provider-specific request formats.
 
 ### Step 4: Parse the Response
 
@@ -272,12 +273,58 @@ curl -X POST https://api.openai.com/v1/chat/completions \
 
 ### Supported API Providers
 
-| Provider | Mode | Notes |
-|----------|------|-------|
-| Puter GPT-OSS | `puter` | Free, no API key, browser-only via Puter SDK |
-| OpenAI Chat Completions | `chat` | Standard `/v1/chat/completions` endpoint |
-| OpenAI Responses API | `responses` | Uses `/v1/responses` with `instructions` + `input` format |
-| Any OpenAI-compatible endpoint | `chat` | Set a custom base URL (OpenRouter, Together, local Ollama, etc.) |
+| Provider | `apiMode` | Base URL | Auth | CORS | Notes |
+|----------|-----------|----------|------|------|-------|
+| Puter GPT-OSS | `puter` | N/A (SDK) | None required | Yes | Free, no API key. Default provider. |
+| OpenRouter | `openrouter` | `https://openrouter.ai/api/v1` | `Authorization: Bearer` | Yes | Hundreds of models. Recommended for browser use with a key. |
+| Anthropic | `anthropic` | `https://api.anthropic.com/v1` | `x-api-key` | With header | Uses Messages API format. Requires `anthropic-dangerous-direct-browser-access` header. |
+| OpenAI | `openai` | `https://api.openai.com/v1` | `Authorization: Bearer` | No | Uses Chat Completions format. Requires CORS proxy for browser use. |
+| Google Gemini | `google` | `https://generativelanguage.googleapis.com/v1beta` | API key in URL | Yes | Uses Gemini generateContent format. |
+| Custom | `custom` | User-defined | `Authorization: Bearer` | Varies | Any OpenAI-compatible endpoint (Together, Ollama, LM Studio, etc.). |
+
+#### Provider-specific request formats
+
+**OpenRouter** uses the same chat completions format as OpenAI, with additional optional headers:
+
+```bash
+curl -X POST https://openrouter.ai/api/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $OPENROUTER_API_KEY" \
+  -H "HTTP-Referer: https://qualityprompts.app" \
+  -H "X-Title: Quality Prompts" \
+  -d '{ "model": "anthropic/claude-sonnet-4", "messages": [...], "temperature": 0.7, "max_tokens": 4096 }'
+```
+
+**Anthropic** uses the Messages API format:
+
+```bash
+curl -X POST https://api.anthropic.com/v1/messages \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: $ANTHROPIC_API_KEY" \
+  -H "anthropic-version: 2023-06-01" \
+  -d '{
+    "model": "claude-sonnet-4-5-20250929",
+    "max_tokens": 4096,
+    "system": "<system message>",
+    "messages": [{ "role": "user", "content": "<user message>" }]
+  }'
+```
+
+Response: `content[0].text` contains the JSON output.
+
+**Google Gemini** uses the generateContent format:
+
+```bash
+curl -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$GOOGLE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "system_instruction": { "parts": [{ "text": "<system message>" }] },
+    "contents": [{ "role": "user", "parts": [{ "text": "<user message>" }] }],
+    "generationConfig": { "temperature": 0.7, "maxOutputTokens": 4096, "responseMimeType": "application/json" }
+  }'
+```
+
+Response: `candidates[0].content.parts[0].text` contains the JSON output.
 
 ## Deployment (GitHub Pages)
 
@@ -299,7 +346,7 @@ qualityprompts/
 ├── js/
 │   ├── app.js          # Workflow orchestration and UI event handling
 │   ├── promptEngine.js # Subject scaffolds, sub-types, STI roles, model constraints, meta-prompt builder
-│   ├── apiClient.js    # API client (Puter, OpenAI Chat Completions, OpenAI Responses)
+│   ├── apiClient.js    # Multi-provider API client (Puter, OpenRouter, Anthropic, OpenAI, Google, Custom)
 │   └── uiRenderer.js   # DOM rendering and interactions
 ├── LICENSE             # MIT License
 ├── ATTESTATION.md      # AI collaboration disclosure
@@ -310,8 +357,10 @@ qualityprompts/
 
 - Pure HTML, CSS, and JavaScript — no frameworks or build tools
 - API key stored in-session or optionally in localStorage
-- Supports any OpenAI-compatible endpoint (configurable base URL and model name)
-- CORS-compatible client-side fetch
+- Six built-in API providers with native request format handling per provider
+- Puter and OpenRouter work directly in the browser without CORS issues
+- Anthropic, OpenAI, and Google require either CORS proxies or non-browser usage
+- Custom endpoint supports any OpenAI-compatible API with configurable base URL
 - Sub-type system is extensible, add `subTypes` to any subject scaffold in `promptEngine.js`
 - STI system roles are per-subject — modify `systemRole` on any scaffold to tune the prompt engineer persona
 

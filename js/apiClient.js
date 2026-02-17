@@ -1,19 +1,55 @@
 const ApiClient = (() => {
-    const DEFAULT_BASE_URL = 'https://api.openai.com/v1';
-    const DEFAULT_MODEL = 'gpt-4o';
-    const DEFAULT_PUTER_MODEL = 'openai/gpt-oss-120b';
+    const PROVIDERS = {
+        puter: {
+            label: 'Puter GPT-OSS',
+            defaultModel: 'openai/gpt-oss-120b'
+        },
+        openrouter: {
+            label: 'OpenRouter',
+            baseUrl: 'https://openrouter.ai/api/v1',
+            defaultModel: 'anthropic/claude-sonnet-4'
+        },
+        anthropic: {
+            label: 'Anthropic',
+            baseUrl: 'https://api.anthropic.com/v1',
+            defaultModel: 'claude-sonnet-4-5-20250929'
+        },
+        openai: {
+            label: 'OpenAI',
+            baseUrl: 'https://api.openai.com/v1',
+            defaultModel: 'gpt-4o'
+        },
+        google: {
+            label: 'Google Gemini',
+            baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
+            defaultModel: 'gemini-2.0-flash'
+        },
+        custom: {
+            label: 'Custom Endpoint',
+            baseUrl: 'https://api.openai.com/v1',
+            defaultModel: 'gpt-4o'
+        }
+    };
 
     async function generatePrompt({ apiKey, baseUrl, model, systemMessage, userMessage, apiMode, puterModel }) {
         if (apiMode === 'puter') {
-            return callPuterApi({ model: puterModel || DEFAULT_PUTER_MODEL, systemMessage, userMessage });
+            return callPuterApi({ model: puterModel || PROVIDERS.puter.defaultModel, systemMessage, userMessage });
         }
 
-        const base = (baseUrl || DEFAULT_BASE_URL).replace(/\/+$/, '');
-        const modelName = model || DEFAULT_MODEL;
+        const provider = PROVIDERS[apiMode] || PROVIDERS.custom;
+        const base = (baseUrl || provider.baseUrl || '').replace(/\/+$/, '');
+        const modelName = model || provider.defaultModel;
 
-        if (apiMode === 'responses') {
-            return callResponsesApi({ base, apiKey, modelName, systemMessage, userMessage });
+        if (apiMode === 'anthropic') {
+            return callAnthropicApi({ base, apiKey, modelName, systemMessage, userMessage });
         }
+        if (apiMode === 'google') {
+            return callGoogleApi({ base, apiKey, modelName, systemMessage, userMessage });
+        }
+        if (apiMode === 'openrouter') {
+            return callOpenRouterApi({ base, apiKey, modelName, systemMessage, userMessage });
+        }
+        // openai, custom — all use OpenAI chat completions format
         return callChatCompletionsApi({ base, apiKey, modelName, systemMessage, userMessage });
     }
 
@@ -35,7 +71,6 @@ const ApiClient = (() => {
             );
         } catch (err) {
             const msg = err?.message || err?.toString?.() || JSON.stringify(err);
-            // Surface the real error details
             if (msg.includes('content_filter') || msg.includes('moderation') || msg.includes('flagged')) {
                 throw new Error(
                     'Content was flagged by the model\'s safety filter. ' +
@@ -60,7 +95,7 @@ const ApiClient = (() => {
         return parseResponse(content);
     }
 
-    // --- OpenAI Chat Completions ---
+    // --- OpenAI Chat Completions (also used by Custom) ---
 
     async function callChatCompletionsApi({ base, apiKey, modelName, systemMessage, userMessage }) {
         const url = `${base}/chat/completions`;
@@ -76,7 +111,7 @@ const ApiClient = (() => {
             response_format: { type: 'json_object' }
         };
 
-        const data = await doFetch(url, apiKey, body);
+        const data = await doFetch(url, { 'Authorization': `Bearer ${apiKey}` }, body);
 
         const content = data.choices?.[0]?.message?.content;
         if (!content) {
@@ -85,42 +120,112 @@ const ApiClient = (() => {
         return parseResponse(content);
     }
 
-    // --- OpenAI Responses API ---
+    // --- OpenRouter ---
 
-    async function callResponsesApi({ base, apiKey, modelName, systemMessage, userMessage }) {
-        const url = `${base}/responses`;
+    async function callOpenRouterApi({ base, apiKey, modelName, systemMessage, userMessage }) {
+        const url = `${base}/chat/completions`;
 
         const body = {
             model: modelName,
-            instructions: systemMessage,
-            input: userMessage,
-            text: {
-                format: { type: 'json_object' }
+            messages: [
+                { role: 'system', content: systemMessage },
+                { role: 'user', content: userMessage }
+            ],
+            temperature: 0.7,
+            max_tokens: 4096
+        };
+
+        const headers = {
+            'Authorization': `Bearer ${apiKey}`,
+            'HTTP-Referer': window.location.origin || 'https://qualityprompts.app',
+            'X-Title': 'Quality Prompts'
+        };
+
+        const data = await doFetch(url, headers, body);
+
+        const content = data.choices?.[0]?.message?.content;
+        if (!content) {
+            throw new Error('No content returned from OpenRouter.');
+        }
+        return parseResponse(content);
+    }
+
+    // --- Anthropic Messages API ---
+
+    async function callAnthropicApi({ base, apiKey, modelName, systemMessage, userMessage }) {
+        const url = `${base}/messages`;
+
+        const body = {
+            model: modelName,
+            max_tokens: 4096,
+            system: systemMessage,
+            messages: [
+                { role: 'user', content: userMessage }
+            ]
+        };
+
+        const headers = {
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true'
+        };
+
+        const data = await doFetch(url, headers, body);
+
+        const textBlock = data.content?.find(b => b.type === 'text');
+        const content = textBlock?.text || null;
+        if (!content) {
+            throw new Error('No content returned from Anthropic API.');
+        }
+        return parseResponse(content);
+    }
+
+    // --- Google Gemini ---
+
+    async function callGoogleApi({ base, apiKey, modelName, systemMessage, userMessage }) {
+        const url = `${base}/models/${modelName}:generateContent?key=${apiKey}`;
+
+        const body = {
+            system_instruction: {
+                parts: [{ text: systemMessage }]
+            },
+            contents: [
+                {
+                    role: 'user',
+                    parts: [{ text: userMessage }]
+                }
+            ],
+            generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 4096,
+                responseMimeType: 'application/json'
             }
         };
 
-        const data = await doFetch(url, apiKey, body);
+        // Gemini uses API key in URL, no Authorization header needed
+        const data = await doFetch(url, {}, body);
 
-        const content = data.output_text
-            || data.output?.[0]?.content?.[0]?.text
-            || null;
-
+        const content = data.candidates?.[0]?.content?.parts?.[0]?.text || null;
         if (!content) {
-            throw new Error('No content returned from the Responses API.');
+            const blockReason = data.candidates?.[0]?.finishReason;
+            if (blockReason === 'SAFETY') {
+                throw new Error('Content was blocked by Gemini safety filters. Try rephrasing your idea.');
+            }
+            throw new Error('No content returned from Google Gemini API.');
         }
         return parseResponse(content);
     }
 
     // --- Shared fetch helper ---
 
-    async function doFetch(url, apiKey, body) {
+    async function doFetch(url, extraHeaders, body) {
         let response;
         try {
             response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
+                    ...extraHeaders
                 },
                 body: JSON.stringify(body)
             });
@@ -128,9 +233,9 @@ const ApiClient = (() => {
             if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
                 throw new Error(
                     'Network error — this is likely a CORS issue. ' +
-                    'The OpenAI API does not allow direct browser requests. ' +
-                    'Try switching to the Puter GPT-OSS provider (free, no CORS issues) ' +
-                    'or use a CORS-compatible proxy.'
+                    'Most API providers do not allow direct browser requests. ' +
+                    'Try switching to Puter GPT-OSS (free, no CORS issues) or OpenRouter (CORS-friendly). ' +
+                    'Alternatively, use a CORS-compatible proxy as your base URL.'
                 );
             }
             throw new Error(`Network error: ${err.message}`);
@@ -145,14 +250,14 @@ const ApiClient = (() => {
             if (response.status === 429) {
                 throw new Error(
                     'Rate limit exceeded (429). This usually means: ' +
-                    '(1) your account has insufficient credits — check billing at platform.openai.com, ' +
+                    '(1) your account has insufficient credits, ' +
                     '(2) you\'ve hit your requests-per-minute limit — wait 60 seconds and retry, or ' +
                     '(3) your account is on the free tier. Consider switching to Puter GPT-OSS (free).'
                 );
             }
             if (response.status === 404) {
                 throw new Error(
-                    `Endpoint not found (404). Check your Base URL and API mode. Tried: ${response.url}`
+                    `Endpoint not found (404). Check your API provider settings. Tried: ${response.url}`
                 );
             }
             throw new Error(`API error (${response.status}): ${msg}`);
@@ -214,7 +319,6 @@ const ApiClient = (() => {
                 firstBrace !== -1 ? firstBrace : 0,
                 lastBrace !== -1 ? lastBrace + 1 : text.length
             );
-            // Replace actual newlines inside JSON string values with \\n
             const repaired = fixed.replace(/(?<=:\s*"[^"]*)\n(?=[^"]*")/g, '\\n');
             return JSON.parse(repaired);
         } catch { /* continue */ }
@@ -240,7 +344,6 @@ const ApiClient = (() => {
             const tokenMatch = content.match(/"token_estimate"\s*:\s*(\d+)/);
             const tokens = tokenMatch ? parseInt(tokenMatch[1], 10) : 0;
 
-            // Try to extract prompt_json
             let promptJson = { prompt: plain };
             const jsonMatch = content.match(/"prompt_json"\s*:\s*(\{[\s\S]*?\})\s*[,}]/);
             if (jsonMatch) {
@@ -259,7 +362,6 @@ const ApiClient = (() => {
         return null;
     }
 
-    // Clean raw response text — remove any JSON artifacts
     function cleanRawResponse(content) {
         return content
             .replace(/^```(?:json)?\s*\n?/, '')
@@ -270,5 +372,5 @@ const ApiClient = (() => {
             .trim();
     }
 
-    return { generatePrompt };
+    return { generatePrompt, PROVIDERS };
 })();

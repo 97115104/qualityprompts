@@ -82,17 +82,67 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// Provider configuration — placeholders, hints, and field visibility
+const PROVIDER_CONFIG = {
+    puter: {
+        // No keyed settings needed
+    },
+    openrouter: {
+        keyPlaceholder: 'sk-or-...',
+        modelPlaceholder: 'anthropic/claude-sonnet-4',
+        hint: 'CORS-friendly — works directly in the browser. Supports hundreds of models. Get a key at openrouter.ai/keys.',
+        showBaseUrl: false
+    },
+    anthropic: {
+        keyPlaceholder: 'sk-ant-...',
+        modelPlaceholder: 'claude-sonnet-4-5-20250929',
+        hint: 'Uses the Anthropic Messages API. Get a key at console.anthropic.com.',
+        showBaseUrl: false
+    },
+    openai: {
+        keyPlaceholder: 'sk-...',
+        modelPlaceholder: 'gpt-4o',
+        hint: 'Uses the OpenAI Chat Completions API. May require a CORS proxy for browser use. Get a key at platform.openai.com.',
+        showBaseUrl: false
+    },
+    google: {
+        keyPlaceholder: 'AIza...',
+        modelPlaceholder: 'gemini-2.0-flash',
+        hint: 'Uses the Google Gemini API. Get a key at aistudio.google.com.',
+        showBaseUrl: false
+    },
+    custom: {
+        keyPlaceholder: 'your-api-key',
+        modelPlaceholder: 'gpt-4o',
+        hint: 'Any OpenAI-compatible endpoint (Together, Ollama, LM Studio, etc.). Uses Bearer token auth and /chat/completions format.',
+        showBaseUrl: true
+    }
+};
+
 function updateApiModeUI() {
     const mode = document.getElementById('api-mode').value;
     const puterSettings = document.getElementById('puter-settings');
-    const openaiSettings = document.getElementById('openai-settings');
+    const keyedSettings = document.getElementById('keyed-settings');
 
     if (mode === 'puter') {
         puterSettings.classList.remove('hidden');
-        openaiSettings.classList.add('hidden');
+        keyedSettings.classList.add('hidden');
     } else {
         puterSettings.classList.add('hidden');
-        openaiSettings.classList.remove('hidden');
+        keyedSettings.classList.remove('hidden');
+
+        // Configure the shared panel for this provider
+        const config = PROVIDER_CONFIG[mode] || PROVIDER_CONFIG.custom;
+        document.getElementById('api-key').placeholder = config.keyPlaceholder;
+        document.getElementById('model-name').placeholder = config.modelPlaceholder;
+        document.getElementById('provider-hint').textContent = config.hint;
+
+        const baseUrlGroup = document.getElementById('base-url-group');
+        if (config.showBaseUrl) {
+            baseUrlGroup.classList.remove('hidden');
+        } else {
+            baseUrlGroup.classList.add('hidden');
+        }
     }
 }
 
@@ -146,6 +196,10 @@ function restoreSettings() {
     const savedMode = localStorage.getItem('qp_api_mode');
     const savedPuterModel = localStorage.getItem('qp_puter_model');
 
+    if (savedMode) {
+        document.getElementById('api-mode').value = savedMode;
+        updateApiModeUI();
+    }
     if (savedKey) {
         document.getElementById('api-key').value = savedKey;
         document.getElementById('save-key').checked = true;
@@ -155,9 +209,6 @@ function restoreSettings() {
     }
     if (savedModel) {
         document.getElementById('model-name').value = savedModel;
-    }
-    if (savedMode) {
-        document.getElementById('api-mode').value = savedMode;
     }
     if (savedPuterModel) {
         document.getElementById('puter-model').value = savedPuterModel;
@@ -228,8 +279,11 @@ async function handleGenerate() {
             params.puterModel = document.getElementById('puter-model').value;
         } else {
             params.apiKey = document.getElementById('api-key').value.trim();
-            params.baseUrl = document.getElementById('base-url').value.trim() || undefined;
             params.model = document.getElementById('model-name').value.trim() || undefined;
+            // Only custom endpoint uses base URL override
+            if (apiMode === 'custom') {
+                params.baseUrl = document.getElementById('base-url').value.trim() || undefined;
+            }
         }
 
         const result = await ApiClient.generatePrompt(params);

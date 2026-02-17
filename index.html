@@ -48,6 +48,15 @@
 
                 <p><strong>Data Analysis</strong> — Exploratory Analysis for data profiling and pattern discovery. Dashboard &amp; Reporting for KPI dashboards with metric definitions. Statistical Modeling for regression, hypothesis testing, and model validation.</p>
 
+                <h4>API providers</h4>
+                <p>Quality Prompts supports multiple API providers. Select your provider in the API Settings panel and enter your API key.</p>
+                <p><strong>Puter GPT-OSS</strong> is the default and is completely free with no API key required. It runs through the Puter SDK and works directly in the browser.</p>
+                <p><strong>OpenRouter</strong> is recommended for users who want access to hundreds of models (Claude, GPT, Gemini, Llama, Mistral, and more) through a single API key. It is CORS-friendly and works directly in the browser without a proxy. Get a key at openrouter.ai/keys.</p>
+                <p><strong>Anthropic</strong> connects directly to the Claude Messages API. Get a key at console.anthropic.com.</p>
+                <p><strong>OpenAI</strong> connects to the Chat Completions API. Get a key at platform.openai.com.</p>
+                <p><strong>Google Gemini</strong> connects to the Gemini API. Get a key at aistudio.google.com.</p>
+                <p><strong>Custom Endpoint</strong> supports any OpenAI-compatible API including Together, Ollama, LM Studio, and self-hosted models. Enter your base URL and it uses the /chat/completions format with Bearer token auth.</p>
+
                 <h4>Tips for best results</h4>
                 <p>Keep your idea brief. The whole point of this tool is to do the heavy lifting for you, so you do not need to write a full prompt yourself. Focus on what you want accomplished, not on how to prompt for it. The more specific your idea is, the better the output will be. For example, "build a dashboard that tracks user retention by cohort" will produce a much better prompt than just "build a dashboard."</p>
 
@@ -72,12 +81,16 @@
                 <label for="api-mode">API Provider</label>
                 <select id="api-mode">
                     <option value="puter">Puter GPT-OSS (Free, no key required)</option>
-                    <option value="chat">OpenAI Chat Completions</option>
-                    <option value="responses">OpenAI Responses API</option>
+                    <option value="openrouter">OpenRouter (CORS-friendly, many models)</option>
+                    <option value="anthropic">Anthropic Claude</option>
+                    <option value="openai">OpenAI</option>
+                    <option value="google">Google Gemini</option>
+                    <option value="custom">Custom Endpoint</option>
                 </select>
             </div>
 
-            <div id="puter-settings">
+            <!-- Puter Settings (no key needed) -->
+            <div id="puter-settings" class="provider-settings">
                 <div class="form-group">
                     <label for="puter-model">Model</label>
                     <select id="puter-model">
@@ -86,27 +99,28 @@
                         <option value="openai/gpt-oss-20b:free">gpt-oss-20b:free</option>
                     </select>
                 </div>
-                <p class="settings-hint">Powered by Puter.com — free, no API key needed. Uses the user-pays model.</p>
+                <p class="settings-hint">Powered by Puter.com — free, no API key needed.</p>
             </div>
 
-            <div id="openai-settings" class="hidden">
+            <!-- Shared fields for all key-based providers -->
+            <div id="keyed-settings" class="provider-settings hidden">
                 <div class="form-group">
                     <label for="api-key">API Key</label>
                     <input type="password" id="api-key" placeholder="sk-...">
                 </div>
-                <div class="form-group">
-                    <label for="base-url">Base URL (optional)</label>
+                <div id="base-url-group" class="form-group hidden">
+                    <label for="base-url">Base URL</label>
                     <input type="text" id="base-url" placeholder="https://api.openai.com/v1">
                 </div>
                 <div class="form-group">
-                    <label for="model-name">Model Name (optional)</label>
+                    <label for="model-name">Model</label>
                     <input type="text" id="model-name" placeholder="gpt-4o">
                 </div>
                 <div class="checkbox-group">
                     <input type="checkbox" id="save-key">
                     <label for="save-key">Remember settings in this browser</label>
                 </div>
-                <p class="settings-hint">Note: The standard OpenAI API (api.openai.com) may not support direct browser requests due to CORS.</p>
+                <p id="provider-hint" class="settings-hint"></p>
             </div>
         </div>
 
