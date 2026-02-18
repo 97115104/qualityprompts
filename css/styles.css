@@ -228,6 +228,17 @@ textarea {
     font-weight: bold;
 }
 
+.alert-box {
+    background: #e3f2fd;
+    border: 1px solid #2196f3;
+    color: #1565c0;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 12px 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
 .error-message {
     color: #d32f2f;
     background: #fce4ec;
@@ -358,6 +369,53 @@ textarea {
     opacity: 1;
 }
 
+.info-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    background: #666;
+    color: #fff;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: help;
+    position: relative;
+    margin-left: 4px;
+    vertical-align: middle;
+}
+
+.info-badge:hover {
+    background: #888;
+}
+
+.info-tooltip {
+    visibility: hidden;
+    width: 320px;
+    background-color: #333;
+    color: #fff;
+    text-align: left;
+    border-radius: 6px;
+    padding: 12px;
+    position: absolute;
+    z-index: 100;
+    top: 125%;
+    left: 50%;
+    margin-left: -160px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    font-size: 12px;
+    line-height: 1.5;
+    font-weight: normal;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.info-badge:hover .info-tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
 .attest-badge {
     display: inline-block;
     background: #999;
@@ -395,5 +453,11 @@ textarea {
     .license-tooltip {
         width: 240px;
         margin-left: -120px;
+    }
+
+    .info-tooltip {
+        width: 260px;
+        margin-left: -130px;
+        left: 50%;
     }
 }

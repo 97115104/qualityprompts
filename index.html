@@ -140,6 +140,8 @@
                     <div class="modal-body">
                         <p>Ollama lets you run AI models locally on your own machine. No API key needed, no data leaves your computer, and it's completely free. This works whether you're running Quality Prompts locally or from <strong>https://97115104.github.io/qualityprompts/</strong> — your browser connects directly to Ollama on your machine.</p>
 
+                        <p class="alert-box"><strong>Browser requirement:</strong> When using Ollama from GitHub Pages (or any HTTPS URL), <strong>Google Chrome is required</strong>. Safari and other WebKit browsers block HTTPS pages from connecting to local HTTP servers. On localhost, any browser works.</p>
+
                         <div class="os-tabs">
                             <button class="os-tab-btn active" data-os="mac">macOS</button>
                             <button class="os-tab-btn" data-os="win">Windows</button>
@@ -285,7 +287,15 @@ Environment="OLLAMA_ORIGINS=*"</pre>
                 </select>
             </div>
             <div class="form-group">
-                <label for="model-type">Target Model</label>
+                <label for="model-type">Target Model <span class="info-badge">?
+                    <div class="info-tooltip">
+                        <strong>Frontier Model</strong> — Detailed prompts (2000+ tokens) with multi-step reasoning, tool-use instructions, and meta-reasoning. For GPT-4o, Claude Opus, Gemini Ultra.<br><br>
+                        <strong>LLM (General)</strong> — Balanced prompts (800-1500 tokens) with moderate reasoning depth. For GPT-3.5, Claude Sonnet, Gemini Pro.<br><br>
+                        <strong>SLM (Small Model)</strong> — Concise prompts (under 600 tokens) with simple, explicit instructions. For Phi, Mistral 7B, Llama 3B.<br><br>
+                        <strong>Paid / Premium</strong> — Extensive prompts leveraging premium capabilities with advanced instruction layering. For ChatGPT Plus, Claude Pro.<br><br>
+                        <strong>Open-source Model</strong> — Straightforward prompts (under 800 tokens) with explicit formatting. For Llama, Qwen, local models.
+                    </div>
+                </span></label>
                 <select id="model-type"></select>
             </div>
         </div>
@@ -293,7 +303,7 @@ Environment="OLLAMA_ORIGINS=*"</pre>
         <div class="form-group">
             <label for="idea-input">Your Idea</label>
             <textarea id="idea-input" maxlength="1500" placeholder="Keep it short, a sentence or two is ideal. The tool builds the full prompt for you." rows="3"></textarea>
-            <div class="char-counter"><span id="char-count">0</span> / 1,500 characters</div>
+            <div class="char-counter"><span id="char-count">0</span><span id="char-limit-display"> / 1,500 characters</span></div>
             <div id="char-limit-hint" class="char-limit-hint hidden">You're at the limit. Remember, the point of this tool is to build the detailed prompt for you — just describe your idea briefly and let Quality Prompts do the rest.</div>
         </div>
 
@@ -363,6 +373,8 @@ Environment="OLLAMA_ORIGINS=*"</pre>
                     <p id="puter-fallback-reason"></p>
 
                     <p>You can run GPT-OSS locally on your machine for free using <strong>Ollama</strong>. No API key, no usage limits, no data leaves your computer. This works from any URL including GitHub Pages.</p>
+
+                    <p class="alert-box"><strong>Browser requirement:</strong> When using Ollama from GitHub Pages (or any HTTPS URL), <strong>Google Chrome is required</strong>. Safari and other WebKit browsers block HTTPS pages from connecting to local HTTP servers.</p>
 
                     <div class="os-tabs">
                         <button class="os-tab-btn active" data-os="mac">macOS</button>

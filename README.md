@@ -394,6 +394,14 @@ When you use Quality Prompts from `https://97115104.github.io` (or any non-local
 
 On localhost (`http://localhost:8000`), most browsers relax CORS for same-machine requests, which is why it works without the flag locally.
 
+### Browser compatibility (non-localhost)
+
+**Google Chrome is required** when accessing Quality Prompts from GitHub Pages (`https://97115104.github.io/qualityprompts/`) or any other HTTPS URL while using Ollama.
+
+Safari, DuckDuckGo, and other WebKit-based browsers block mixed content — they refuse to let an HTTPS page (`https://...`) make requests to an HTTP endpoint (`http://localhost:11434`), even for localhost. Chrome treats localhost as a "secure context" and allows this scenario.
+
+If you're running Quality Prompts locally on `http://localhost`, any browser works fine.
+
 A "Switch to Ollama now" button in the modal automatically changes the API provider, sets the defaults, and opens the settings panel.
 
 ### Preflight checks

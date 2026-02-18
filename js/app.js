@@ -114,10 +114,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const charLimitHint = document.getElementById('char-limit-hint');
     ideaInput.addEventListener('input', () => {
         const len = ideaInput.value.length;
+        const mode = document.getElementById('api-mode').value;
+        const hasNoLimit = mode === 'ollama' || mode === 'custom';
         charCount.textContent = len.toLocaleString();
-        charCounter.classList.toggle('near-limit', len >= 1200 && len < 1500);
-        charCounter.classList.toggle('at-limit', len >= 1500);
-        charLimitHint.classList.toggle('hidden', len < 1500);
+        if (!hasNoLimit) {
+            charCounter.classList.toggle('near-limit', len >= 1200 && len < 1500);
+            charCounter.classList.toggle('at-limit', len >= 1500);
+            charLimitHint.classList.toggle('hidden', len < 1500);
+        }
     });
 
     // Generate button
@@ -366,6 +370,22 @@ function updateApiModeUI() {
     const puterSettings = document.getElementById('puter-settings');
     const ollamaSettings = document.getElementById('ollama-settings');
     const keyedSettings = document.getElementById('keyed-settings');
+    const ideaInput = document.getElementById('idea-input');
+    const charLimitDisplay = document.getElementById('char-limit-display');
+    const charLimitHint = document.getElementById('char-limit-hint');
+    const charCounter = document.querySelector('.char-counter');
+
+    // No character limit for Ollama or Custom endpoints
+    const hasNoLimit = mode === 'ollama' || mode === 'custom';
+    if (hasNoLimit) {
+        ideaInput.removeAttribute('maxlength');
+        charLimitDisplay.textContent = ' characters';
+        charLimitHint.classList.add('hidden');
+        charCounter.classList.remove('near-limit', 'at-limit');
+    } else {
+        ideaInput.setAttribute('maxlength', '1500');
+        charLimitDisplay.textContent = ' / 1,500 characters';
+    }
 
     puterSettings.classList.add('hidden');
     ollamaSettings.classList.add('hidden');
