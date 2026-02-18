@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     UIRenderer.setupDownloadButtons();
     setupShareIdeaButton();
     setupOpenInButtons();
+    setupAssessButtons();
     setupOsTabs();
 
     // How to use modal
@@ -285,6 +286,43 @@ function setupOpenInButtons() {
                     );
                 });
             }
+        });
+    });
+}
+
+function setupAssessButtons() {
+    document.querySelectorAll('.btn-assess').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const mode = btn.dataset.mode;
+            const plainEl = document.getElementById('plain-content');
+            const prompt = plainEl.dataset.rawText || plainEl.textContent;
+            const encodedPrompt = encodeURIComponent(prompt);
+            
+            // Build context from current settings
+            const subjectType = document.getElementById('subject-type');
+            const subType = document.getElementById('sub-type');
+            const modelType = document.getElementById('model-type');
+            
+            const contextParts = [];
+            if (subjectType && subjectType.selectedOptions[0]) {
+                contextParts.push('Subject: ' + subjectType.selectedOptions[0].text);
+            }
+            if (subType && subType.value && subType.selectedOptions[0]) {
+                contextParts.push('Style: ' + subType.selectedOptions[0].text);
+            }
+            if (modelType && modelType.selectedOptions[0]) {
+                contextParts.push('Target: ' + modelType.selectedOptions[0].text);
+            }
+            
+            let url = 'https://97115104.github.io/assessprompts/?prompt=' + encodedPrompt;
+            if (contextParts.length > 0) {
+                url += '&context=' + encodeURIComponent(contextParts.join(' | '));
+            }
+            if (mode === 'run') {
+                url += '&enter';
+            }
+            
+            window.open(url, '_blank', 'noopener,noreferrer');
         });
     });
 }

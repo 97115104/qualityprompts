@@ -269,6 +269,68 @@
     background: #999;
 }
 
+/* Assess Prompts section */
+.assess-section {
+    background: transparent;
+    margin-left: -20px;
+    margin-right: -20px;
+    padding: 20px;
+    border-top: none;
+    border-radius: 8px;
+}
+
+.assess-hint {
+    margin: 0 0 14px 0;
+    font-size: 14px;
+    color: #555;
+    line-height: 1.5;
+}
+
+.assess-hint a {
+    color: #555;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.assess-hint a:hover {
+    text-decoration: underline;
+}
+
+.btn-assess {
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+}
+
+.btn-assess:hover {
+    transform: translateY(-1px);
+}
+
+.btn-assess:active {
+    transform: translateY(0);
+}
+
+.btn-assess-prefill {
+    background: #999;
+}
+
+.btn-assess-prefill:hover {
+    background: #777;
+}
+
+.btn-assess-run {
+    background: #999;
+}
+
+.btn-assess-run:hover {
+    background: #777;
+}
+
 /* Clipboard toast modal */
 .clipboard-modal {
     position: fixed;

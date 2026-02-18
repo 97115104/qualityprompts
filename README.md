@@ -13,6 +13,7 @@ Transform simple ideas into high-quality, production-ready prompts optimized for
 - **Fully serverless** — Runs entirely in the browser with no backend required
 - **Share Idea** — Share a prefilled URL of your idea, with or without auto-generate, via a share modal
 - **Use this prompt** — Open the generated prompt directly in ChatGPT, Claude, Copilot, or Gemini
+- **Assess this prompt** — Send the generated prompt to [Assess Prompts](https://97115104.github.io/assessprompts/) for quality scoring, optimization suggestions, and cost estimates
 - **Copy, download, and email** — One-click copy, download, or share the generated prompt via email
 - **URL routing** — Prefill prompts via query parameters and optionally auto-generate on page load
 - **Smart loading UX** — Preflight connection checks, progressive status updates, and slow-generation hints
@@ -466,6 +467,19 @@ After generating a prompt, the **Use this prompt** section at the bottom of the 
 | Gemini | Copies prompt to clipboard, opens gemini.google.com — paste to use |
 
 For Claude, Copilot, and Gemini, a brief modal confirms the prompt was copied and reminds you to paste it when the page opens.
+
+### Assess This Prompt
+
+Above "Use this prompt," the **Assess this prompt** section lets you send the generated prompt to [Assess Prompts](https://97115104.github.io/assessprompts/) for expert AI feedback:
+
+| Button | Behavior |
+|--------|----------|
+| Open in Assess Prompts | Prefills the prompt in Assess Prompts — click Assess to run |
+| Assess now | Prefills the prompt and automatically starts assessment |
+
+Both buttons pass the current subject type, prompt style, and target model as context to Assess Prompts, giving the assessor relevant information about the prompt's intended use.
+
+Assess Prompts provides a quality score (0-100), letter grade, strengths, issues, missing elements, optimization suggestions, an optimized version of your prompt, and cost estimates across frontier models.
 
 ### Share via Email
 
