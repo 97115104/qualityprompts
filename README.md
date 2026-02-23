@@ -10,7 +10,7 @@ Transform simple ideas into high-quality, production-ready prompts optimized for
 - **Model-aware generation** — Adjusts verbosity, reasoning depth, and constraints for Frontier, LLM, SLM, Paid/Premium, and Open-source models
 - **Multi-provider support** — Puter (free), OpenRouter, Anthropic, OpenAI, Google Gemini, Ollama (local), and any OpenAI-compatible custom endpoint
 - **Multiple output formats** — Plain text, structured markdown, and JSON for agent/API ingestion
-- **Contextual tooltips** — Hover tooltips explain each Subject Type, Prompt Style, and Target Model to help users choose the right options
+- **Contextual tooltips** — Hover tooltips explain each Subject Type, Prompt Style, and Target Model. The Prompt Style tooltip dynamically updates to show options relevant to the selected subject type
 - **Fully serverless** — Runs entirely in the browser with no backend required
 - **Share Idea** — Share a prefilled URL of your idea, with or without auto-generate, via a share modal
 - **Use this prompt** — Open the generated prompt directly in ChatGPT, Claude, Copilot, or Gemini
@@ -19,16 +19,18 @@ Transform simple ideas into high-quality, production-ready prompts optimized for
 - **URL routing** — Prefill prompts via query parameters and optionally auto-generate on page load
 - **Smart loading UX** — Preflight connection checks, progressive status updates, and slow-generation hints
 - **Automatic fallback** — When Puter errors occur, a guided Ollama setup walkthrough appears so the tool always works
+- **AI Attestation** — Development and Build Based On prompts can include [attest.ink](https://attest.ink) workflow instructions for transparent AI collaboration disclosure
 
 ## How It Works
 
 1. Select an API provider (Puter GPT-OSS is free and requires no key)
 2. Select a subject type and optionally a prompt style
 3. Select a target model class
-4. Type a simple idea or concept (or prefill via URL with `?prompt=`)
-5. Optionally click **Share Idea** to share a prefilled link before generating
-6. Click **Generate Prompt**
-7. Get back an optimized prompt in three formats — copy, download, email, or open directly in ChatGPT, Claude, Copilot, or Gemini
+4. For Development or Build Based On, optionally enable AI Attestation (on by default)
+5. Type a simple idea or concept (or prefill via URL with `?prompt=`)
+6. Optionally click **Share Idea** to share a prefilled link before generating
+7. Click **Generate Prompt**
+8. Get back an optimized prompt in three formats — copy, download, email, or open directly in ChatGPT, Claude, Copilot, or Gemini
 
 The tool sends your idea to a language model along with subject-specific scaffolds, a domain-tuned system role, prompt style context, and model-specific constraints. The model returns a structured, production-ready prompt with evaluation criteria, deliverables, and edge case handling.
 
@@ -48,6 +50,7 @@ Every subject type has specialized prompt styles that adapt the generated prompt
 | Blockchain / Web3 | Building blockchain and Web3 applications. Covers smart contracts, wallet integration, RPC providers, token standards, testing, and deployment. |
 | Jekyll Blog Site | Building static blogs with Jekyll. Includes Ruby installation instructions, Jekyll setup, theme selection, _config.yml configuration, and GitHub Pages deployment. |
 | HTML/CSS/JS (GitHub Pages) | Building simple static sites with no build tools. Produces prompts for pure HTML/CSS/JS projects that work by opening index.html directly, designed for GitHub Pages hosting. |
+| Toy Application | Building small, single-purpose utility tools that solve specific workflow friction. Ideal for format converters, data transformers, prompt improvers, and other AI workflow utilities. Deploys to GitHub Pages with no setup required. |
 
 ### Writing
 
@@ -119,6 +122,7 @@ The Build Based On subject type requires entering a URL to analyze. All styles u
 | As Blockchain / Web3 | Creating a Web3 application based on an existing site, with smart contracts and decentralized storage. |
 | As Jekyll Site | Creating a Jekyll static blog based on an existing site, with GitHub Pages deployment. |
 | As HTML/CSS/JS | Creating a static site based on an existing site, using only HTML, CSS, and JavaScript with no build tools. |
+| As Toy Application | Creating a simplified toy application inspired by an existing tool. Extracts the core utility function and builds a single-purpose version optimized for your workflow. |
 
 ## Subject-Type Instructions (STI)
 
@@ -147,6 +151,69 @@ For Development and Build Based On prompts, the generated prompts instruct model
 
 When you generate a Development or Build Based On prompt, the output will instruct the target model to organize configuration in JSON files, use JSON objects for state management, and prefer structured data over ad-hoc variables.
 
+## AI Attestation
+
+For Development and Build Based On prompts, Quality Prompts can include instructions for adding an [attest.ink](https://attest.ink) attestation workflow to the generated code. This is **enabled by default** and can be toggled off via the "Include AI Attestation" dropdown.
+
+### What is AI Attestation?
+
+AI attestation is a transparent way to disclose that AI tools were used in creating software or content. The attestation creates:
+
+1. **ATTESTATION.md** — A markdown file in the project root documenting the AI collaboration level
+2. **Verification badge** — A subtle footer link ("built with ai" or "ai assisted") that links to cryptographic verification
+3. **Verifiable proof** — The attestation data is encoded and can be verified at attest.ink/verify
+
+### Why Include Attestation?
+
+- **Transparency** — Being upfront about AI collaboration builds trust with users and collaborators
+- **Emerging requirements** — Some platforms and jurisdictions are beginning to require AI disclosure
+- **Provenance** — Creates a verifiable record of how content was created
+- **Professional standards** — Demonstrates responsible AI use practices
+
+### Attestation Roles
+
+The attestation specifies one of three collaboration levels:
+
+| Role | Description |
+|------|-------------|
+| `generated` | AI created most of the content with human direction and review |
+| `assisted` | Human-AI collaboration where both contributed significantly |
+| `reviewed` | Human created the content, AI reviewed or refined it |
+
+### How It Works
+
+When "Include AI Attestation" is set to Yes (the default for Development and Build Based On), the generated prompt includes detailed instructions for the target model to:
+
+1. Create an `ATTESTATION.md` file with structured metadata about AI collaboration
+2. Add a verification badge in the footer of any HTML output
+3. Link the badge to attest.ink/verify with base64-encoded attestation data
+
+The attestation is completely free to create and verify. No account or API key is required.
+
+### Example ATTESTATION.md
+
+```markdown
+# AI Attestation
+
+This project was developed with AI assistance.
+
+| Field | Value |
+|-------|-------|
+| Version | 2.0 |
+| Content | My Project Name |
+| Timestamp | 2026-02-23T12:00:00.000Z |
+| Platform | attest.ink |
+| Model | claude-opus-4 |
+| Role | assisted |
+
+## Description
+
+AI tools were used to generate initial scaffolding, implement features, and debug issues.
+All code was reviewed and tested by the human developer.
+
+[Verify this attestation →](https://attest.ink/verify/?data=...)
+```
+
 ## Agentic API Usage
 
 Quality Prompts can be used programmatically by any agent, script, or automation that can call an OpenAI-compatible chat completions endpoint. The tool itself is a static frontend — the actual prompt generation happens through the LLM API. An agent can replicate the exact same generation logic by constructing the same system and user messages and sending them to any compatible endpoint.
@@ -163,7 +230,7 @@ Select one value from each category:
 
 | Subject | Available Sub-Types |
 |---------|-------------------|
-| `development` | `specification`, `iteration`, `diagnostic`, `serverless-app`, `vercel`, `blockchain-web3`, `jekyll-site`, `html-css-js` |
+| `development` | `specification`, `iteration`, `diagnostic`, `serverless-app`, `vercel`, `blockchain-web3`, `jekyll-site`, `html-css-js`, `toy-app` |
 | `writing` | `long-form`, `short-form`, `marketing-comms` |
 | `strategy` | `business`, `go-to-market`, `technical` |
 | `product` | `prd`, `user-story`, `feature-spec` |
@@ -171,14 +238,17 @@ Select one value from each category:
 | `marketing` | `campaign`, `content`, `social-media` |
 | `research` | `literature-review`, `user-research`, `market-research` |
 | `data-analysis` | `exploratory`, `dashboard`, `statistical` |
-| `build` | `clone`, `extend`, `improve`, `serverless-app`, `vercel`, `blockchain-web3`, `jekyll-site`, `html-css-js` |
+| `build` | `clone`, `extend`, `improve`, `serverless-app`, `vercel`, `blockchain-web3`, `jekyll-site`, `html-css-js`, `toy-app` |
 
 ### Step 2: Build the Messages
 
 The system message and user message are constructed from scaffolds defined in `js/promptEngine.js`. An agent can either:
 
-1. **Load the scaffolds directly** from `promptEngine.js` and call `PromptEngine.buildMetaPrompt(subjectType, idea, modelType, subType)` if running in a JavaScript environment, or
+1. **Load the scaffolds directly** from `promptEngine.js` and call `PromptEngine.buildMetaPrompt(subjectType, idea, modelType, subType, options)` if running in a JavaScript environment, or
 2. **Construct the messages manually** following the template below.
+
+The `options` parameter is an object that can include:
+- `includeAttestation` (boolean, default: `false`) — When `true`, adds AI attestation workflow instructions for Development and Build Based On prompts
 
 #### System Message Template
 

@@ -156,6 +156,36 @@ const PromptEngine = (() => {
                 systemContext: 'The user wants to create a static site based on an existing website using only HTML, CSS, and JavaScript. The generated prompt must instruct the target model to produce complete, working files — not a specification. The files should work by opening index.html directly.',
                 additionalDimensions: ['URL to analyze', 'Features from source site to preserve']
             }
+        },
+        'toy-app': {
+            key: 'toy-app',
+            label: 'Toy Application',
+            dimensions: [
+                'Specific friction point or workflow inefficiency to solve',
+                'Input format and data transformation required',
+                'Output format and expected deliverables',
+                'Single-purpose utility focus (one tool, one job)',
+                'Static hosting approach (GitHub Pages preferred)',
+                'No server dependencies unless API functionality is required',
+                'Minimal UI — functional over beautiful',
+                'Instant usability (no setup, no auth, no onboarding)',
+                'File structure (index.html, css/, js/, assets/)',
+                'Browser-only execution where possible',
+                'Optional: Vercel serverless function for API exposure',
+                'Optional: Integration with other tools or agents'
+            ],
+            development: {
+                description: 'For building small, single-purpose utility tools that solve specific workflow friction. Toy apps are quick to build, easy to host, and turn recurring manual tasks into automated micro-utilities. Ideal for format converters, data transformers, prompt improvers, and other developer productivity tools.',
+                outputHints: 'Generate a prompt that instructs the model to BUILD a complete, working toy application. The app should be self-contained, require no setup, and immediately solve the specified friction point. Prefer static HTML/CSS/JS for GitHub Pages hosting. Include all files needed to deploy and use immediately.',
+                systemContext: 'The user wants to build a toy application — a small, single-purpose utility tool that solves a specific workflow friction point. Toy apps are common in AI-assisted development workflows where recurring friction (format conversions, data transformations, prompt improvements) is turned into hosted micro-utilities. The generated prompt must instruct the target model to produce a complete, working application that can be deployed to GitHub Pages or similar static hosting. The app should be instantly usable with no setup required.'
+            },
+            buildBasedOn: {
+                labelPrefix: 'As ',
+                description: 'For creating a toy application inspired by or derived from an existing tool. Analyze the source to extract the core utility, then build a simplified, single-purpose version optimized for your specific workflow.',
+                outputHints: 'Generate a prompt that instructs the model to analyze the source URL, identify the core utility function, and BUILD a simplified toy application version. The app should be self-contained and deployable to GitHub Pages.',
+                systemContext: 'The user wants to create a toy application based on an existing tool or website. Analyze the source to identify the core utility function, then instruct the target model to build a simplified, single-purpose version optimized for the user\'s specific workflow. The output should be a complete, working application deployable to static hosting.',
+                additionalDimensions: ['URL to analyze', 'Specific functionality to extract and simplify']
+            }
         }
     };
 
@@ -254,7 +284,8 @@ const PromptEngine = (() => {
                 'vercel': createDevSubType('vercel'),
                 'blockchain-web3': createDevSubType('blockchain-web3'),
                 'jekyll-site': createDevSubType('jekyll-site'),
-                'html-css-js': createDevSubType('html-css-js')
+                'html-css-js': createDevSubType('html-css-js'),
+                'toy-app': createDevSubType('toy-app')
             }
         },
         writing: {
@@ -823,7 +854,8 @@ const PromptEngine = (() => {
                 'vercel': createBuildSubType('vercel'),
                 'blockchain-web3': createBuildSubType('blockchain-web3'),
                 'jekyll-site': createBuildSubType('jekyll-site'),
-                'html-css-js': createBuildSubType('html-css-js')
+                'html-css-js': createBuildSubType('html-css-js'),
+                'toy-app': createBuildSubType('toy-app')
             }
         }
     };
@@ -890,9 +922,10 @@ const PromptEngine = (() => {
         }
     };
 
-    function buildMetaPrompt(subjectType, idea, modelType, subType) {
+    function buildMetaPrompt(subjectType, idea, modelType, subType, options = {}) {
         const subject = subjectScaffolds[subjectType];
         const model = modelConstraints[modelType] || modelConstraints.llm;
+        const { includeAttestation = false } = options;
 
         // Resolve sub-type dimensions and hints if applicable
         const activeSubType = (subject.subTypes && subType) ? subject.subTypes[subType] : null;
@@ -926,6 +959,39 @@ Return ONLY the JSON object. No markdown fences, no explanation outside the JSON
             subTypeInstruction = `\n**Prompt Category:** ${activeSubType.label}\n**Category Purpose:** ${activeSubType.description}\n`;
         }
 
+        // AI Attestation instructions for Development and Build Based On prompts
+        const attestationInstructions = includeAttestation ? `
+
+**AI Attestation Workflow (REQUIRED):**
+The generated prompt MUST instruct the model to include an AI attestation workflow using attest.ink. This provides transparency about AI collaboration in the codebase. Include these requirements:
+
+1. Create an ATTESTATION.md file in the project root with this structure:
+   - Version: 2.0
+   - Content name: [project name]
+   - Timestamp: ISO 8601 format
+   - Platform: attest.ink
+   - Model: [model used, e.g., claude-opus-4]
+   - Role: One of "generated" (AI created most content), "assisted" (human-AI collaboration), or "reviewed" (AI reviewed human work)
+   - A brief description of what AI assistance was used for
+
+2. Add a verification badge in the footer of any HTML pages:
+   - Small "built with ai" or "ai assisted" text link
+   - Link to attest.ink/verify with the attestation data as a base64-encoded JSON parameter
+   - Badge should be subtle (small font, muted color) but visible
+
+3. The attestation data structure for the verification link:
+   {
+     "version": "2.0",
+     "id": "[date]-[short-id]",
+     "content_name": "[project name]",
+     "timestamp": "[ISO 8601 timestamp]",
+     "platform": "attest.ink",
+     "model": "[model name]",
+     "role": "[generated|assisted|reviewed]"
+   }
+
+This attestation is free to create and verify via attest.ink. It builds trust by being transparent about AI collaboration.` : '';
+
         const userMessage = `Transform this idea into a high-quality prompt:
 
 **Subject Type:** ${subject.label}${subTypeInstruction}
@@ -941,7 +1007,7 @@ ${dimensions.map(d => `- ${d}`).join('\n')}
 ${model.instructions.map(i => `- ${i}`).join('\n')}
 
 **Verbosity Level:** ${model.verbosity}
-**Prompt Length Guidance:** ${model.maxPromptGuidance}
+**Prompt Length Guidance:** ${model.maxPromptGuidance}${attestationInstructions}
 
 **Prompt Improvement Checklist — the generated prompt MUST:**
 1. Clarify the objective explicitly — state what the model should produce and what "done" looks like

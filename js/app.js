@@ -10,15 +10,17 @@ document.addEventListener('DOMContentLoaded', () => {
     populateSubjectTypes();
     populateModelTypes();
 
-    // Subject type change — show/hide sub-type dropdown and URL field
+    // Subject type change — show/hide sub-type dropdown, URL field, and attestation
     document.getElementById('subject-type').addEventListener('change', () => {
         updateSubTypeDropdown();
         updateBuildUrlField();
+        updateAttestationDropdown();
     });
     // Sub-type change — show/hide URL field for "Build Based On" styles
     document.getElementById('sub-type').addEventListener('change', updateBuildUrlField);
     updateSubTypeDropdown();
     updateBuildUrlField();
+    updateAttestationDropdown();
 
     // Restore saved settings
     restoreSettings();
@@ -482,9 +484,77 @@ function updateSubTypeDropdown() {
             select.appendChild(option);
         });
         group.style.display = '';
+        updateSubTypeTooltip(subjectType);
     } else {
         group.style.display = 'none';
     }
+}
+
+function updateSubTypeTooltip(subjectType) {
+    const tooltip = document.getElementById('sub-type-tooltip');
+    if (!tooltip) return;
+
+    const tooltips = {
+        development: `<strong>General</strong> — Default development dimensions for any coding task.<br><br>
+<strong>Specification Prompt</strong> — Starting from scratch with no prior context. Covers language, framework, file structure, and all constraints.<br><br>
+<strong>Iteration Prompt</strong> — Making targeted changes to existing code. Short, surgical prompts pointing to exact files and functions.<br><br>
+<strong>Diagnostic Prompt</strong> — Debugging unknown failures. Structures the problem with error messages and expected vs actual behavior.<br><br>
+<strong>Serverless</strong> — AWS Lambda, GCP Functions, Azure, Cloudflare Workers with IaC tooling.<br><br>
+<strong>Vercel</strong> — Next.js, SvelteKit, Astro with Edge Runtime, ISR, and Vercel-specific features.<br><br>
+<strong>Blockchain/Web3</strong> — Smart contracts, wallet integration, and decentralized apps.<br><br>
+<strong>Jekyll</strong> — Static blogs with Ruby, Liquid templates, and GitHub Pages.<br><br>
+<strong>HTML/CSS/JS</strong> — Pure static sites with no build tools.<br><br>
+<strong>Toy Application</strong> — Small, single-purpose utility tools that solve specific workflow friction.`,
+
+        writing: `<strong>General</strong> — Default writing dimensions for any content task.<br><br>
+<strong>Creative Writing (Long-Form)</strong> — Essays, blog posts, articles, fiction. Establishes voice, structure, pacing, and thematic depth.<br><br>
+<strong>Short-Form Copy</strong> — Ads, taglines, social posts, product descriptions. Optimizes for clarity, impact, and brevity with multiple variants.<br><br>
+<strong>Marketing Communications</strong> — Emails, newsletters, press releases. Structures output around audience, channel, and conversion goal.`,
+
+        strategy: `<strong>General</strong> — Default strategy dimensions for business planning.<br><br>
+<strong>Business Strategy</strong> — Competitive positioning, growth planning, market entry. Produces structured analysis with prioritized recommendations.<br><br>
+<strong>Go-to-Market Strategy</strong> — Product launches, pricing, channel selection. Produces phased GTM plans with budget allocation and milestones.<br><br>
+<strong>Technical Strategy</strong> — Architecture decisions, technology selection, migration planning. Produces trade-off analysis with evaluation matrices.`,
+
+        product: `<strong>General</strong> — Default product dimensions for requirements work.<br><br>
+<strong>Product Requirements Document</strong> — Full PRD with problem statement, personas, requirements, acceptance criteria, and out-of-scope boundaries.<br><br>
+<strong>User Stories</strong> — Sprint-ready stories in standard format with Given/When/Then acceptance criteria and edge cases.<br><br>
+<strong>Feature Specification</strong> — Single feature in detail including all states (empty, loading, error, success), business rules, and API contracts.`,
+
+        design: `<strong>General</strong> — Default design dimensions for visual and UX work.<br><br>
+<strong>UI/UX Design</strong> — Wireframes, interaction flows, component specs with responsive behavior and accessibility requirements.<br><br>
+<strong>Design Assets</strong> — Logos, icons, illustrations. Produces precise visual descriptions for image generation or creative briefs.<br><br>
+<strong>Photo Editing</strong> — Image modification, retouching, compositing. Separates what to change from what to preserve.`,
+
+        marketing: `<strong>General</strong> — Default marketing dimensions for campaigns and content.<br><br>
+<strong>Campaign Planning</strong> — Multi-channel campaigns with timelines, creative briefs, budget allocation, and performance targets.<br><br>
+<strong>Content Strategy</strong> — Editorial calendars, content pillars, SEO plans, and distribution strategy tied to business goals.<br><br>
+<strong>Social Media</strong> — Platform-specific strategies accounting for conventions, posting cadence, and algorithm behavior.`,
+
+        research: `<strong>General</strong> — Default research dimensions for analysis and inquiry.<br><br>
+<strong>Literature Review</strong> — Systematic source synthesis, gap analysis, annotated bibliographies with inclusion/exclusion criteria.<br><br>
+<strong>User Research</strong> — Interview guides, survey design, usability studies, persona development with bias mitigation.<br><br>
+<strong>Market Research</strong> — Competitive analysis, market sizing (TAM/SAM/SOM), industry trend analysis with source attribution.`,
+
+        'data-analysis': `<strong>General</strong> — Default data analysis dimensions.<br><br>
+<strong>Exploratory Analysis</strong> — Initial data profiling, pattern discovery, hypothesis generation with systematic exploration plans.<br><br>
+<strong>Dashboard & Reporting</strong> — KPI dashboards with precise metric definitions, visualization choices, and interactivity specs.<br><br>
+<strong>Statistical Modeling</strong> — Regression, classification, hypothesis testing, model validation with assumption checking and reproducibility.`,
+
+        build: `<strong>General</strong> — Default dimensions for analyzing and recreating sites.<br><br>
+<strong>Clone</strong> — Recreate an existing site with the same look, feel, and functionality.<br><br>
+<strong>Extend</strong> — Add new features while maintaining design consistency.<br><br>
+<strong>Improve</strong> — Analyze and implement fixes for design, performance, accessibility, or UX.<br><br>
+<strong>As Serverless</strong> — Create a serverless app based on the source (AWS, GCP, Azure, Cloudflare).<br><br>
+<strong>As Vercel</strong> — Create a Vercel-deployed app with Edge Runtime and ISR.<br><br>
+<strong>As Blockchain/Web3</strong> — Create a Web3 app with smart contracts.<br><br>
+<strong>As Jekyll</strong> — Create a Jekyll static blog based on the source.<br><br>
+<strong>As HTML/CSS/JS</strong> — Create a static site with no build tools.<br><br>
+<strong>As Toy Application</strong> — Extract the core utility and build a simplified single-purpose version.`
+    };
+
+    const content = tooltips[subjectType] || `Specialized prompt templates tailored for different workflows.<br><br><strong>General</strong> uses the default dimensions for the subject type.`;
+    tooltip.innerHTML = content;
 }
 
 function updateBuildUrlField() {
@@ -495,6 +565,17 @@ function updateBuildUrlField() {
         urlGroup.classList.remove('hidden');
     } else {
         urlGroup.classList.add('hidden');
+    }
+}
+
+function updateAttestationDropdown() {
+    const subjectType = document.getElementById('subject-type').value;
+    const group = document.getElementById('attestation-group');
+    // Show attestation option only for Development and Build Based On
+    if (subjectType === 'development' || subjectType === 'build') {
+        group.style.display = '';
+    } else {
+        group.style.display = 'none';
     }
 }
 
@@ -688,7 +769,8 @@ async function handleGenerate() {
 
     // Build meta-prompt
     updateLoadingStatus('Sending request...', 'Building optimized prompt for ' + (apiMode === 'puter' ? 'Puter' : apiMode === 'ollama' ? 'Ollama' : apiMode));
-    const { system, user } = PromptEngine.buildMetaPrompt(subjectType, idea, modelType, subType);
+    const includeAttestation = document.getElementById('attestation').value === 'yes';
+    const { system, user } = PromptEngine.buildMetaPrompt(subjectType, idea, modelType, subType, { includeAttestation });
     params.systemMessage = system;
     params.userMessage = user;
 
