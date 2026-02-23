@@ -10,9 +10,15 @@ document.addEventListener('DOMContentLoaded', () => {
     populateSubjectTypes();
     populateModelTypes();
 
-    // Subject type change — show/hide sub-type dropdown
-    document.getElementById('subject-type').addEventListener('change', updateSubTypeDropdown);
+    // Subject type change — show/hide sub-type dropdown and URL field
+    document.getElementById('subject-type').addEventListener('change', () => {
+        updateSubTypeDropdown();
+        updateBuildUrlField();
+    });
+    // Sub-type change — show/hide URL field for "Build Based On" styles
+    document.getElementById('sub-type').addEventListener('change', updateBuildUrlField);
     updateSubTypeDropdown();
+    updateBuildUrlField();
 
     // Restore saved settings
     restoreSettings();
@@ -481,6 +487,17 @@ function updateSubTypeDropdown() {
     }
 }
 
+function updateBuildUrlField() {
+    const subjectType = document.getElementById('subject-type').value;
+    const subType = document.getElementById('sub-type').value;
+    const urlGroup = document.getElementById('build-url-group');
+    if (PromptEngine.subTypeRequiresUrl(subjectType, subType)) {
+        urlGroup.classList.remove('hidden');
+    } else {
+        urlGroup.classList.add('hidden');
+    }
+}
+
 function populateModelTypes() {
     const select = document.getElementById('model-type');
     PromptEngine.getModelTypes().forEach(({ value, label }) => {
@@ -580,8 +597,17 @@ async function handleGenerate() {
     const apiMode = document.getElementById('api-mode').value;
     const subjectType = document.getElementById('subject-type').value;
     const subType = document.getElementById('sub-type').value || null;
-    const idea = document.getElementById('idea-input').value.trim();
+    let idea = document.getElementById('idea-input').value.trim();
     const modelType = document.getElementById('model-type').value;
+
+    // For "Build Based On" styles, prepend the URL to the idea
+    const requiresUrl = PromptEngine.subTypeRequiresUrl(subjectType, subType);
+    if (requiresUrl) {
+        const buildUrl = document.getElementById('build-url').value.trim();
+        if (buildUrl) {
+            idea = `URL to analyze: ${buildUrl}\n\n${idea}`;
+        }
+    }
 
     // Validate
     UIRenderer.hideError();
@@ -596,9 +622,18 @@ async function handleGenerate() {
         }
     }
 
-    if (!idea) {
+    if (!idea || (!requiresUrl && !document.getElementById('idea-input').value.trim())) {
         UIRenderer.showError('Please enter a prompt idea.');
         return;
+    }
+
+    // For Build Based On styles, validate URL is provided
+    if (requiresUrl) {
+        const buildUrl = document.getElementById('build-url').value.trim();
+        if (!buildUrl) {
+            UIRenderer.showError('Please enter a URL to analyze.');
+            return;
+        }
     }
 
     // Save settings

@@ -29,10 +29,13 @@
                 <h4>How it works</h4>
                 <p>Select a subject type, then optionally choose a prompt style to tailor the output for a specific workflow. Choose a target model class to optimize prompt length and complexity. Type a short idea into the text field, a sentence or two is ideal. Click Generate Prompt and the tool returns your optimized prompt in three formats: Plain Text for copy-pasting, Structured with markdown, and JSON for agents and APIs.</p>
 
+                <h4>JSON-first architecture</h4>
+                <p>Development and Build Based On prompts instruct models to use <strong>JSON objects</strong> for configuration, state management, and data structures. This promotes composability (JSON objects can be merged and extended), extensibility (new properties don't break existing code), and interoperability (JSON is the universal interchange format). When you generate a Development or Build Based On prompt, the output will guide the target model to organize data in structured JSON rather than scattered variables.</p>
+
                 <h4>Prompt styles</h4>
                 <p>Every subject type has specialized prompt styles that adapt the generated prompt for different workflows. When you select a subject type, the Prompt Style dropdown appears with options tailored to that category. Select General to use the default dimensions without a specific style.</p>
 
-                <p><strong>Development</strong> — Specification Prompt for new projects with no prior context. Iteration Prompt for targeted changes to existing code. Diagnostic Prompt for debugging unknown failures.</p>
+                <p><strong>Development</strong> — Specification Prompt for new projects with no prior context. Iteration Prompt for targeted changes to existing code. Diagnostic Prompt for debugging unknown failures. Serverless (Multi-Cloud) for AWS Lambda, GCP Functions, Azure, or Cloudflare with IaC tooling. Vercel (Next.js/Edge) for Vercel-deployed apps with framework integration and edge functions. Blockchain/Web3 for smart contracts and decentralized applications. Jekyll Blog Site for static blogs with installation instructions. HTML/CSS/JS (GitHub Pages) for simple static sites with no build tools.</p>
 
                 <p><strong>Writing</strong> — Creative Writing (Long-Form) for essays, articles, and narrative work. Short-Form Copy for ads, taglines, and microcopy. Marketing Communications for emails, newsletters, and press releases.</p>
 
@@ -47,6 +50,8 @@
                 <p><strong>Research</strong> — Literature Review for systematic source synthesis and gap analysis. User Research for interview guides, surveys, and usability studies. Market Research for competitive analysis and market sizing.</p>
 
                 <p><strong>Data Analysis</strong> — Exploratory Analysis for data profiling and pattern discovery. Dashboard &amp; Reporting for KPI dashboards with metric definitions. Statistical Modeling for regression, hypothesis testing, and model validation.</p>
+
+                <p><strong>Build Based On</strong> — Requires a URL to analyze. Clone for recreating an existing site. Extend for adding new features while maintaining design consistency. Improve for implementing fixes to design, performance, accessibility, or UX. Tech stack options: As Serverless (Multi-Cloud), As Vercel (Next.js/Edge), As Blockchain/Web3, As Jekyll Site, or As HTML/CSS/JS.</p>
 
                 <h4>API providers</h4>
                 <p>Quality Prompts supports multiple API providers. Select your provider in the API Settings panel and enter your API key.</p>
@@ -277,15 +282,40 @@ Environment="OLLAMA_ORIGINS=*"</pre>
         <!-- Input Section -->
         <div class="form-row">
             <div class="form-group">
-                <label for="subject-type">Subject Type</label>
+                <label for="subject-type">Subject Type <span class="info-badge">?
+                    <div class="info-tooltip">
+                        <strong>Development</strong> — Software, apps, scripts, and technical implementation.<br><br>
+                        <strong>Writing</strong> — Essays, articles, copy, and marketing communications.<br><br>
+                        <strong>Strategy</strong> — Business planning, GTM, and technical decisions.<br><br>
+                        <strong>Product</strong> — PRDs, user stories, and feature specifications.<br><br>
+                        <strong>Design</strong> — UI/UX, visual assets, and photo editing.<br><br>
+                        <strong>Marketing</strong> — Campaigns, content strategy, and social media.<br><br>
+                        <strong>Research</strong> — Literature reviews, user research, and market analysis.<br><br>
+                        <strong>Data Analysis</strong> — Exploratory analysis, dashboards, and statistical modeling.<br><br>
+                        <strong>Build Based On</strong> — Analyze a URL and generate a prompt to clone, extend, or improve it with your chosen tech stack (Serverless, Jekyll, HTML/CSS/JS).
+                    </div>
+                </span></label>
                 <select id="subject-type"></select>
             </div>
             <div class="form-group" id="sub-type-group" style="display: none;">
-                <label for="sub-type">Prompt Style</label>
+                <label for="sub-type">Prompt Style <span class="info-badge">?
+                    <div class="info-tooltip">
+                        Specialized prompt templates tailored for different workflows within each subject type.<br><br>
+                        <strong>General</strong> uses the default dimensions for the subject type.<br><br>
+                        Select a specific style to get a prompt optimized for that particular use case — for example, "Specification Prompt" for new projects or "Diagnostic Prompt" for debugging.
+                    </div>
+                </span></label>
                 <select id="sub-type">
                     <option value="">General</option>
                 </select>
             </div>
+        </div>
+        <div id="build-url-group" class="form-group hidden">
+            <label for="build-url">URL to Analyze</label>
+            <input type="url" id="build-url" placeholder="https://example.com">
+            <p class="settings-hint">Enter the URL of a site you want to clone, extend, or improve. The prompt will include analysis guidance.</p>
+        </div>
+        <div class="form-row">
             <div class="form-group">
                 <label for="model-type">Target Model <span class="info-badge">?
                     <div class="info-tooltip">

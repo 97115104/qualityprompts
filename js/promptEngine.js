@@ -1,8 +1,192 @@
 const PromptEngine = (() => {
+    // Shared tech stack definitions for extensibility and composability
+    // Each stack can be used in both Development and Build Based On contexts
+    const techStacks = {
+        'serverless-app': {
+            key: 'serverless-app',
+            label: 'Serverless (Multi-Cloud)',
+            dimensions: [
+                'Cloud provider (AWS Lambda, Google Cloud Functions, Azure Functions, Cloudflare Workers)',
+                'Runtime and language (Node.js, Python, Go, Rust, etc.)',
+                'Trigger type (HTTP, schedule, queue, event, webhook)',
+                'Managed services to integrate (DynamoDB, S3, Firestore, Supabase, PlanetScale, etc.)',
+                'Authentication and authorization approach (JWT, API keys, OAuth, Cognito, Auth0)',
+                'Environment variables and secrets management',
+                'Cold start considerations and optimization',
+                'Infrastructure as Code (Serverless Framework, SAM, CDK, Pulumi, Terraform)',
+                'Local development and testing setup',
+                'Deployment pipeline and CI/CD integration',
+                'Monitoring, logging, and observability',
+                'Cost considerations and scaling limits'
+            ],
+            development: {
+                description: 'For building serverless applications on any major cloud provider (AWS, GCP, Azure, Cloudflare). Choose your provider, configure IaC, and deploy cloud functions with managed services.',
+                outputHints: 'Generate a prompt that instructs the model to BUILD working serverless code. Specify the cloud provider and IaC tool, then ask for complete function handlers, configuration files, and deployment templates — not a specification.',
+                systemContext: 'The user wants to build a multi-cloud serverless application. The generated prompt must instruct the target model to produce working serverless code — function handlers, IaC configuration (serverless.yml, SAM template, CDK, etc.), and deployment scripts — not a specification.'
+            },
+            buildBasedOn: {
+                labelPrefix: 'As ',
+                description: 'For creating a multi-cloud serverless application based on an existing site. Choose your cloud provider and IaC tooling.',
+                outputHints: 'Generate a prompt that instructs the model to BUILD a working serverless application based on the source URL. Specify the cloud provider and IaC tool, then ask for working function code, configuration files, and deployment templates.',
+                systemContext: 'The user wants to create a multi-cloud serverless application based on an existing website. The generated prompt must instruct the target model to produce working serverless code — function handlers, IaC configuration, and deployment templates — not a specification.',
+                additionalDimensions: ['URL to analyze', 'Features from source site to preserve']
+            }
+        },
+        'vercel': {
+            key: 'vercel',
+            label: 'Vercel (Next.js/Edge)',
+            dimensions: [
+                'Framework selection (Next.js, SvelteKit, Nuxt, Astro, Remix, or vanilla)',
+                'Runtime (Node.js or Edge Runtime)',
+                'API routes structure (/api directory or app router)',
+                'Serverless function configuration (memory, timeout, regions)',
+                'Edge functions vs serverless functions trade-offs',
+                'Environment variables in Vercel dashboard',
+                'Vercel KV, Blob, Postgres, or external data stores',
+                'Incremental Static Regeneration (ISR) strategy',
+                'Middleware for auth, redirects, and rewrites',
+                'Preview deployments and branch configuration',
+                'Vercel CLI and local development (vercel dev)',
+                'vercel.json configuration options',
+                'Analytics and Web Vitals integration',
+                'Deployment regions and edge network'
+            ],
+            development: {
+                description: 'For building applications deployed on Vercel with Next.js, SvelteKit, Astro, or other frameworks. Leverages Vercel-specific features like Edge Runtime, ISR, middleware, and preview deployments.',
+                outputHints: 'Generate a prompt that instructs the model to BUILD a working Vercel application. Specify framework and runtime, then ask for complete files including API routes, vercel.json, and Vercel-specific configuration.',
+                systemContext: 'The user wants to build an application for Vercel deployment using Vercel-specific features. The generated prompt must instruct the target model to produce working code — API routes, serverless/edge functions, and vercel.json configuration — not a specification.'
+            },
+            buildBasedOn: {
+                labelPrefix: 'As ',
+                description: 'For creating a Vercel-deployed application based on an existing site. Uses Vercel-specific features like Edge Runtime, ISR, and middleware.',
+                outputHints: 'Generate a prompt that instructs the model to BUILD a working Vercel application based on the source URL. Analyze the source, then ask for complete files including API routes and vercel.json.',
+                systemContext: 'The user wants to create a Vercel application based on an existing website using Vercel-specific features. The generated prompt must instruct the target model to produce working Vercel-compatible code — not a specification.',
+                additionalDimensions: ['URL to analyze', 'Features from source site to preserve']
+            }
+        },
+        'blockchain-web3': {
+            key: 'blockchain-web3',
+            label: 'Blockchain / Web3',
+            dimensions: [
+                'Blockchain network (Ethereum, Polygon, Solana, Base, Arbitrum, etc.)',
+                'Smart contract language (Solidity, Rust, Move)',
+                'Development framework (Hardhat, Foundry, Anchor)',
+                'Contract architecture (upgradeable, proxy patterns, diamond)',
+                'Token standards (ERC-20, ERC-721, ERC-1155, SPL)',
+                'Frontend Web3 library (ethers.js, viem, wagmi, web3.js)',
+                'Wallet integration (MetaMask, WalletConnect, Coinbase Wallet)',
+                'RPC provider (Alchemy, Infura, QuickNode, public RPC)',
+                'Testing strategy (local node, forking, fuzzing)',
+                'Gas optimization techniques',
+                'Security considerations (reentrancy, access control, oracle manipulation)',
+                'Deployment and verification (Etherscan, Sourcify)',
+                'IPFS/Arweave for decentralized storage',
+                'Indexing (The Graph, custom indexer)'
+            ],
+            development: {
+                description: 'For building blockchain and Web3 applications with smart contracts and decentralized frontends. The generated prompt should instruct the model to build working Web3 code.',
+                outputHints: 'Generate a prompt that instructs the model to BUILD working Web3 code. Specify the chain and stack, then ask for complete smart contracts, deployment scripts, and frontend integration — not a specification.',
+                systemContext: 'The user wants to build a blockchain/Web3 application. The generated prompt must instruct the target model to produce working code — smart contracts, tests, deployment scripts, and frontend — not a specification.'
+            },
+            buildBasedOn: {
+                labelPrefix: 'As ',
+                description: 'For creating a Web3 application based on an existing site or dApp. The generated prompt should instruct the model to build a working blockchain implementation.',
+                outputHints: 'Generate a prompt that instructs the model to BUILD a working Web3 application based on the source. Analyze the source functionality, then ask for smart contracts, deployment scripts, and frontend code.',
+                systemContext: 'The user wants to create a Web3 application based on an existing site. The generated prompt must instruct the target model to produce working blockchain code — not a specification.',
+                additionalDimensions: ['URL to analyze', 'Features from source to implement on-chain']
+            }
+        },
+        'jekyll-site': {
+            key: 'jekyll-site',
+            label: 'Jekyll Blog Site',
+            dimensions: [
+                'Ruby version and installation method (rbenv, rvm, system Ruby)',
+                'Jekyll installation steps (gem install jekyll bundler)',
+                'Project initialization (jekyll new or manual setup)',
+                'Theme selection (minima, minimal-mistakes, just-the-docs, custom)',
+                '_config.yml configuration (title, description, baseurl, url, plugins)',
+                'Directory structure (_posts, _layouts, _includes, _data, _sass, assets)',
+                'Front matter requirements for posts and pages',
+                'Liquid template syntax and custom includes',
+                'Plugins to enable (jekyll-feed, jekyll-seo-tag, jekyll-sitemap)',
+                'Local development server (bundle exec jekyll serve)',
+                'GitHub Pages deployment configuration',
+                'Custom domain setup and HTTPS',
+                'Build and deployment workflow'
+            ],
+            development: {
+                description: 'For building Jekyll static sites with Ruby, Liquid templates, and GitHub Pages. The generated prompt should instruct the model to build a working Jekyll site.',
+                outputHints: 'Generate a prompt that instructs the model to BUILD a working Jekyll site. Include installation steps, then ask for complete Jekyll files — _config.yml, layouts, includes, posts, and stylesheets — not a specification.',
+                systemContext: 'The user wants to build a Jekyll site. The generated prompt must instruct the target model to produce working Jekyll files — configuration, templates, posts, and assets — not a specification document.'
+            },
+            buildBasedOn: {
+                labelPrefix: 'As ',
+                description: 'For creating a Jekyll static blog based on an existing site. The generated prompt should instruct the model to build a working Jekyll site.',
+                outputHints: 'Generate a prompt that instructs the model to BUILD a working Jekyll site based on the source URL. Include installation steps, then ask for complete Jekyll files — _config.yml, layouts, includes, posts, and stylesheets.',
+                systemContext: 'The user wants to create a Jekyll static site based on an existing website. The generated prompt must instruct the target model to produce working Jekyll files — configuration, templates, posts, and assets — not a specification.',
+                additionalDimensions: ['URL to analyze', 'Content migration approach from source site']
+            }
+        },
+        'html-css-js': {
+            key: 'html-css-js',
+            label: 'HTML/CSS/JS (GitHub Pages)',
+            dimensions: [
+                'Project file structure (index.html, css/, js/, assets/)',
+                'HTML5 semantic structure (header, main, nav, section, footer)',
+                'CSS approach (single file, component files, CSS variables)',
+                'JavaScript organization (vanilla JS, ES modules, single file)',
+                'Responsive design strategy (mobile-first, breakpoints)',
+                'No build tools required (no npm, no bundler, no transpiler)',
+                'Browser compatibility targets',
+                'Accessibility requirements (semantic HTML, ARIA, keyboard navigation)',
+                'Asset optimization (image formats, lazy loading)',
+                'GitHub Pages deployment (push to main or gh-pages branch)',
+                'Custom domain configuration (CNAME file)',
+                'Relative paths for all assets (for GitHub Pages subpath compatibility)'
+            ],
+            development: {
+                description: 'For building simple static websites using only HTML, CSS, and JavaScript. The generated prompt should instruct the model to build working files.',
+                outputHints: 'Generate a prompt that instructs the model to BUILD complete HTML, CSS, and JS files. No build step, no dependencies — just working files that open directly in a browser.',
+                systemContext: 'The user wants a static website with only HTML, CSS, and JavaScript. The generated prompt must instruct the target model to produce complete, working files — not a specification. The files should work by opening index.html directly in a browser.'
+            },
+            buildBasedOn: {
+                labelPrefix: 'As ',
+                description: 'For creating a static site based on an existing site using only HTML, CSS, and JavaScript. The generated prompt should instruct the model to build working files based on the source.',
+                outputHints: 'Generate a prompt that instructs the model to BUILD complete HTML, CSS, and JS files based on the source URL. Analyze the source, then ask for working files that recreate it — not a specification.',
+                systemContext: 'The user wants to create a static site based on an existing website using only HTML, CSS, and JavaScript. The generated prompt must instruct the target model to produce complete, working files — not a specification. The files should work by opening index.html directly.',
+                additionalDimensions: ['URL to analyze', 'Features from source site to preserve']
+            }
+        }
+    };
+
+    // Helper functions to create subTypes from shared techStacks
+    const createDevSubType = (stackKey) => {
+        const stack = techStacks[stackKey];
+        return {
+            label: stack.label,
+            description: stack.development.description,
+            dimensions: [...stack.dimensions],
+            outputHints: stack.development.outputHints,
+            systemContext: stack.development.systemContext
+        };
+    };
+
+    const createBuildSubType = (stackKey) => {
+        const stack = techStacks[stackKey];
+        return {
+            label: (stack.buildBasedOn.labelPrefix || '') + stack.label,
+            description: stack.buildBasedOn.description,
+            requiresUrl: true,
+            dimensions: [...(stack.buildBasedOn.additionalDimensions || []), ...stack.dimensions],
+            outputHints: stack.buildBasedOn.outputHints,
+            systemContext: stack.buildBasedOn.systemContext
+        };
+    };
+
     const subjectScaffolds = {
         development: {
             label: 'Development',
-            systemRole: 'You are an expert prompt engineer specializing in software development workflows.',
+            systemRole: 'You are an expert prompt engineer specializing in software development. You create prompts that instruct models to build working software using JSON objects for configuration, state, and data structures — promoting composability and extensibility.',
             dimensions: [
                 'Technical architecture and design patterns',
                 'Input/output specifications',
@@ -10,13 +194,14 @@ const PromptEngine = (() => {
                 'Testing strategy',
                 'Performance considerations',
                 'Security implications',
-                'Code quality and maintainability'
+                'Code quality and maintainability',
+                'JSON-based configuration and data structures'
             ],
-            outputHints: 'Include code examples, file structure, and implementation steps.',
+            outputHints: 'Generate a prompt that instructs the model to BUILD the software — produce working code, complete files, and implementation. Emphasize using JSON objects for configuration, state management, and data structures. Not a specification document.',
             subTypes: {
                 specification: {
                     label: 'Specification Prompt',
-                    description: 'For starting something new where the model has no prior context. The generated prompt should be detailed and explicit.',
+                    description: 'For starting something new where the model has no prior context. The generated prompt should instruct the model to build the complete implementation.',
                     dimensions: [
                         'Programming language and framework selection with version constraints',
                         'Project file structure and directory layout',
@@ -31,12 +216,12 @@ const PromptEngine = (() => {
                         'Security requirements and threat model',
                         'Deployment target and infrastructure'
                     ],
-                    outputHints: 'Generate a comprehensive specification prompt. Include explicit language, framework, file structure, naming conventions, and all constraints upfront. The prompt should be 3-4 paragraphs minimum. The cost of being explicit is far lower than the cost of debugging implicit assumptions.',
-                    systemContext: 'The user is starting a new project or feature from scratch. The target model will have zero prior context. The generated prompt must be self-contained and leave nothing to assumption. Prioritize completeness and specificity over brevity.'
+                    outputHints: 'Generate a comprehensive prompt that instructs the model to BUILD the software. The prompt should specify language, framework, file structure, and constraints — then ask for working code, not a spec. Include explicit instructions to produce complete, runnable files.',
+                    systemContext: 'The user is starting a new project or feature from scratch. The generated prompt must instruct the target model to produce working code and complete files, not a specification document. The prompt specifies what to build and how, then asks for the implementation.'
                 },
                 iteration: {
                     label: 'Iteration Prompt',
-                    description: 'For changing or improving existing code where the model already has context. The generated prompt should be short and surgical.',
+                    description: 'For changing or improving existing code where the model already has context. The generated prompt should instruct the model to make specific code changes.',
                     dimensions: [
                         'Exact file, function, and line location of the change',
                         'What is currently wrong or needs improvement',
@@ -45,12 +230,12 @@ const PromptEngine = (() => {
                         'Impact on related components or imports',
                         'Verification criteria for the change'
                     ],
-                    outputHints: 'Generate a short, surgical prompt. Point to exact files, functions, and lines. Describe what is wrong and what a better result looks like. Do NOT restate the full specification. Assume the model has project context from files or previous state. Restating everything wastes tokens and can confuse the model.',
-                    systemContext: 'The user has existing code and needs a targeted change. The target model will already have project context. The generated prompt should be concise and precise — avoid restating the full specification. Focus on the delta.'
+                    outputHints: 'Generate a short, surgical prompt that instructs the model to MAKE the code changes. Point to exact files, functions, and lines. Ask for the updated code, not a description of what to change.',
+                    systemContext: 'The user has existing code and needs a targeted change. The generated prompt must instruct the target model to produce the actual code changes — not describe them. The prompt should be concise and ask for implementation, not explanation.'
                 },
                 diagnostic: {
                     label: 'Diagnostic Prompt',
-                    description: 'For debugging when something is broken and the cause is unknown. The generated prompt should structure the problem for maximum diagnostic accuracy.',
+                    description: 'For debugging when something is broken and the cause is unknown. The generated prompt should instruct the model to diagnose and fix the issue.',
                     dimensions: [
                         'Error message or stack trace (exact text)',
                         'The function or module that produced the error',
@@ -61,9 +246,15 @@ const PromptEngine = (() => {
                         'Relevant code context surrounding the failure',
                         'Reproduction steps'
                     ],
-                    outputHints: 'Generate a diagnostic prompt that structures the debugging problem clearly. Include placeholders for error messages, the function that produced the error, and the input that triggered it. Including too little context is the most common mistake — the prompt should instruct the user to provide the error, the function, AND the input. Just pasting an error and saying "fix this" leads to wrong guesses.',
-                    systemContext: 'The user has a bug or failure and does not know the root cause. The target model needs structured diagnostic context to reason accurately. The generated prompt must elicit error messages, relevant code, inputs, and expected vs actual behavior. Completeness of context directly correlates with diagnostic accuracy.'
-                }
+                    outputHints: 'Generate a diagnostic prompt that asks the model to identify the root cause AND provide the fix. Include placeholders for error messages and context, then ask for working corrected code.',
+                    systemContext: 'The user has a bug and needs it fixed. The generated prompt must instruct the target model to diagnose the issue and produce working corrected code — not just explain what might be wrong.'
+                },
+                // Tech stack subTypes generated from shared techStacks object
+                'serverless-app': createDevSubType('serverless-app'),
+                'vercel': createDevSubType('vercel'),
+                'blockchain-web3': createDevSubType('blockchain-web3'),
+                'jekyll-site': createDevSubType('jekyll-site'),
+                'html-css-js': createDevSubType('html-css-js')
             }
         },
         writing: {
@@ -553,6 +744,87 @@ const PromptEngine = (() => {
                     systemContext: 'The user needs a statistical modeling approach with proper rigor. The target model should specify methods, validate assumptions, define evaluation criteria, and document limitations. The prompt must enforce methodological discipline — the model should check assumptions before running models and report confidence intervals, not just point estimates.'
                 }
             }
+        },
+        build: {
+            label: 'Build Based On',
+            systemRole: 'You are an expert prompt engineer specializing in analyzing existing websites and creating prompts that instruct models to build working implementations based on them. Implementations should use JSON objects for configuration and data structures — promoting composability and extensibility.',
+            requiresUrl: true,
+            dimensions: [
+                'URL to analyze',
+                'Target tech stack for the build',
+                'Core functionality to preserve or implement',
+                'Visual design elements to match',
+                'Content structure and information architecture',
+                'Interactive features and behavior',
+                'Performance and accessibility requirements',
+                'Deployment target',
+                'JSON-based configuration and data structures'
+            ],
+            outputHints: 'Generate a prompt that instructs the model to BUILD a working implementation based on the source URL. Emphasize using JSON objects for configuration and data. The prompt should analyze the source, then ask for complete working code — not a specification.',
+            subTypes: {
+                clone: {
+                    label: 'Clone',
+                    description: 'For recreating an existing site with the same look, feel, and functionality. The generated prompt should instruct the model to build a working clone.',
+                    requiresUrl: true,
+                    dimensions: [
+                        'URL to analyze',
+                        'Visual fidelity requirements (pixel-perfect vs inspired-by)',
+                        'Layout and responsive behavior to match',
+                        'Color palette, typography, and spacing extraction',
+                        'Interactive elements and their behavior',
+                        'Content structure and hierarchy',
+                        'Assets to recreate vs source from original',
+                        'Target tech stack selection',
+                        'Deployment target (GitHub Pages, Vercel, etc.)',
+                        'Legal and ethical considerations'
+                    ],
+                    outputHints: 'Generate a prompt that instructs the model to BUILD a working clone of the source site. Include analysis guidance, then ask for complete working code files that recreate the site.',
+                    systemContext: 'The user wants to recreate an existing website. The generated prompt must instruct the target model to produce working code that clones the source site — not a specification. The prompt should guide analysis of the source, then ask for complete implementation files.'
+                },
+                extend: {
+                    label: 'Extend',
+                    description: 'For adding new features or sections to an existing site while maintaining design consistency. The generated prompt should instruct the model to build the new additions.',
+                    requiresUrl: true,
+                    dimensions: [
+                        'URL to analyze for existing patterns',
+                        'New feature or section to add',
+                        'Design system elements to extract and reuse',
+                        'Component patterns to follow',
+                        'Navigation and IA integration',
+                        'Consistency requirements with existing site',
+                        'New functionality requirements',
+                        'Target tech stack selection',
+                        'API or data integration needs',
+                        'Testing approach for new additions'
+                    ],
+                    outputHints: 'Generate a prompt that instructs the model to BUILD new features that integrate with the existing site. Analyze the source for patterns, then ask for working code that extends it.',
+                    systemContext: 'The user wants to extend an existing website with new features. The generated prompt must instruct the target model to produce working code for the new additions — not a specification. The prompt should guide pattern extraction from the source, then ask for implementation.'
+                },
+                improve: {
+                    label: 'Improve',
+                    description: 'For analyzing an existing site and implementing improvements for design, performance, accessibility, or UX. The generated prompt should instruct the model to analyze and then implement fixes.',
+                    requiresUrl: true,
+                    dimensions: [
+                        'URL to analyze',
+                        'Improvement focus areas (design, performance, accessibility, UX, SEO)',
+                        'Current pain points or known issues',
+                        'Target metrics or standards to achieve',
+                        'Budget and effort constraints',
+                        'Priority ranking of improvements',
+                        'Implementation approach (incremental vs redesign)',
+                        'Target tech stack for improvements',
+                        'Measurement and validation approach'
+                    ],
+                    outputHints: 'Generate a prompt that instructs the model to analyze the source site, identify improvements, AND produce the improved code. Ask for working files that implement the fixes, not just recommendations.',
+                    systemContext: 'The user wants to improve an existing website. The generated prompt must instruct the target model to analyze the source, identify issues, and produce working code that implements the improvements \u2014 not just recommendations.'
+                },
+                // Tech stack subTypes generated from shared techStacks object
+                'serverless-app': createBuildSubType('serverless-app'),
+                'vercel': createBuildSubType('vercel'),
+                'blockchain-web3': createBuildSubType('blockchain-web3'),
+                'jekyll-site': createBuildSubType('jekyll-site'),
+                'html-css-js': createBuildSubType('html-css-js')
+            }
         }
     };
 
@@ -714,5 +986,16 @@ Generate the optimized prompt now. Return only the JSON object.`;
         }));
     }
 
-    return { buildMetaPrompt, getSubjectTypes, getModelTypes, getSubTypes };
+    function subTypeRequiresUrl(subjectType, subType) {
+        const subject = subjectScaffolds[subjectType];
+        if (!subject) return false;
+        // Check if subject type itself requires URL
+        if (subject.requiresUrl === true) return true;
+        // Check if sub-type requires URL
+        if (!subject.subTypes || !subType) return false;
+        const sub = subject.subTypes[subType];
+        return sub && sub.requiresUrl === true;
+    }
+
+    return { buildMetaPrompt, getSubjectTypes, getModelTypes, getSubTypes, subTypeRequiresUrl };
 })();

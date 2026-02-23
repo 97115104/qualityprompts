@@ -4,12 +4,13 @@ Transform simple ideas into high-quality, production-ready prompts optimized for
 
 ## Features
 
-- **Subject-specific optimization** — Tailored prompt scaffolds for Development, Writing, Strategy, Product, Design, Marketing, Research, and Data Analysis
+- **Subject-specific optimization** — Tailored prompt scaffolds for Development, Writing, Strategy, Product, Design, Marketing, Research, Data Analysis, and Build Based On
 - **Prompt styles for every category** — Each subject type has specialized sub-types that adapt the prompt for specific workflows (PRDs, diagnostic debugging, photo editing, campaign planning, and more)
 - **Subject-type instructions (STI)** — Each subject type carries a domain-specific system role that tunes the prompt engineer persona for the subject at hand, producing higher-quality output than a generic role
 - **Model-aware generation** — Adjusts verbosity, reasoning depth, and constraints for Frontier, LLM, SLM, Paid/Premium, and Open-source models
 - **Multi-provider support** — Puter (free), OpenRouter, Anthropic, OpenAI, Google Gemini, Ollama (local), and any OpenAI-compatible custom endpoint
 - **Multiple output formats** — Plain text, structured markdown, and JSON for agent/API ingestion
+- **Contextual tooltips** — Hover tooltips explain each Subject Type, Prompt Style, and Target Model to help users choose the right options
 - **Fully serverless** — Runs entirely in the browser with no backend required
 - **Share Idea** — Share a prefilled URL of your idea, with or without auto-generate, via a share modal
 - **Use this prompt** — Open the generated prompt directly in ChatGPT, Claude, Copilot, or Gemini
@@ -42,6 +43,11 @@ Every subject type has specialized prompt styles that adapt the generated prompt
 | Specification Prompt | Starting a new project or feature from scratch with no prior context. Produces detailed prompts covering language, framework, file structure, naming conventions, dependency policy, and all constraints. |
 | Iteration Prompt | Making a targeted change to existing code. Produces short, surgical prompts that point to exact files and functions without restating the full specification. |
 | Diagnostic Prompt | Debugging an unknown failure. Produces prompts that structure the problem with error messages, triggering inputs, and expected versus actual behavior. |
+| Serverless (Multi-Cloud) | Building serverless applications on any major cloud provider (AWS Lambda, GCP Functions, Azure Functions, Cloudflare Workers). Choose your provider, configure IaC (Serverless Framework, SAM, CDK, Pulumi, Terraform), and deploy cloud functions with managed services. |
+| Vercel (Next.js/Edge) | Building applications for Vercel deployment with Next.js, SvelteKit, Astro, or other frameworks. Leverages Vercel-specific features like Edge Runtime, ISR, middleware, preview deployments, and Vercel KV/Blob/Postgres. |
+| Blockchain / Web3 | Building blockchain and Web3 applications. Covers smart contracts, wallet integration, RPC providers, token standards, testing, and deployment. |
+| Jekyll Blog Site | Building static blogs with Jekyll. Includes Ruby installation instructions, Jekyll setup, theme selection, _config.yml configuration, and GitHub Pages deployment. |
+| HTML/CSS/JS (GitHub Pages) | Building simple static sites with no build tools. Produces prompts for pure HTML/CSS/JS projects that work by opening index.html directly, designed for GitHub Pages hosting. |
 
 ### Writing
 
@@ -99,6 +105,21 @@ Every subject type has specialized prompt styles that adapt the generated prompt
 | Dashboard & Reporting | KPI dashboards with precise metric definitions, visualization choices, and interactivity specifications. |
 | Statistical Modeling | Regression, classification, hypothesis testing, and model validation with assumption checking and reproducibility. |
 
+### Build Based On
+
+The Build Based On subject type requires entering a URL to analyze. All styles use the source URL as a reference for cloning, extending, improving, or creating new implementations with a specific tech stack.
+
+| Style | Use When |
+|-------|----------|
+| Clone | Recreating an existing site with the same look, feel, and functionality. |
+| Extend | Adding new features to an existing site while maintaining design consistency. |
+| Improve | Analyzing an existing site and generating improvement recommendations for design, performance, accessibility, or UX. |
+| As Serverless (Multi-Cloud) | Creating a multi-cloud serverless application based on an existing site. Choose your cloud provider (AWS, GCP, Azure, Cloudflare) and IaC tooling. |
+| As Vercel (Next.js/Edge) | Creating a Vercel-deployed application based on an existing site, with Edge Runtime, ISR, middleware, and Vercel-specific features. |
+| As Blockchain / Web3 | Creating a Web3 application based on an existing site, with smart contracts and decentralized storage. |
+| As Jekyll Site | Creating a Jekyll static blog based on an existing site, with GitHub Pages deployment. |
+| As HTML/CSS/JS | Creating a static site based on an existing site, using only HTML, CSS, and JavaScript with no build tools. |
+
 ## Subject-Type Instructions (STI)
 
 Each subject type carries a `systemRole` field that tunes the system message for the domain at hand. Instead of a generic "You are an expert prompt engineer" role, the system message adapts:
@@ -111,8 +132,20 @@ Each subject type carries a `systemRole` field that tunes the system message for
 - **Marketing** — "specializing in marketing strategy, campaign planning, and audience engagement"
 - **Research** — "specializing in research methodology, analysis, and evidence-based inquiry"
 - **Data Analysis** — "specializing in data analysis, statistical methods, and data visualization"
+- **Build Based On** — "specializing in analyzing existing websites and generating specifications to recreate, extend, or improve them with specific technology stacks"
 
 When a prompt style (sub-type) is selected, the system message also receives a `systemContext` block that further narrows the model's focus. For example, selecting "Diagnostic Prompt" under Development adds context about structuring debugging problems, while selecting "Photo Editing" under Design adds context about separating modifications from preservation. This two-layer approach (subject role + sub-type context) produces significantly better prompts than a one-size-fits-all system message.
+
+## JSON-First Architecture
+
+For Development and Build Based On prompts, the generated prompts instruct models to use **JSON objects for configuration, state management, and data structures**. This is an intentional architectural choice:
+
+- **Composability** — JSON objects can be easily merged, extended, or overridden without string manipulation
+- **Extensibility** — New properties can be added to JSON configs without breaking existing code
+- **Readability** — Structured data is easier to read and debug than scattered variables or magic strings
+- **Interoperability** — JSON is the universal interchange format across languages, APIs, and tools
+
+When you generate a Development or Build Based On prompt, the output will instruct the target model to organize configuration in JSON files, use JSON objects for state management, and prefer structured data over ad-hoc variables.
 
 ## Agentic API Usage
 
@@ -122,7 +155,7 @@ Quality Prompts can be used programmatically by any agent, script, or automation
 
 Select one value from each category:
 
-**Subject types:** `development`, `writing`, `strategy`, `product`, `design`, `marketing`, `research`, `data-analysis`
+**Subject types:** `development`, `writing`, `strategy`, `product`, `design`, `marketing`, `research`, `data-analysis`, `build`
 
 **Model types:** `frontier`, `llm`, `slm`, `paid`, `open-source`
 
@@ -130,7 +163,7 @@ Select one value from each category:
 
 | Subject | Available Sub-Types |
 |---------|-------------------|
-| `development` | `specification`, `iteration`, `diagnostic` |
+| `development` | `specification`, `iteration`, `diagnostic`, `serverless-app`, `vercel`, `blockchain-web3`, `jekyll-site`, `html-css-js` |
 | `writing` | `long-form`, `short-form`, `marketing-comms` |
 | `strategy` | `business`, `go-to-market`, `technical` |
 | `product` | `prd`, `user-story`, `feature-spec` |
@@ -138,6 +171,7 @@ Select one value from each category:
 | `marketing` | `campaign`, `content`, `social-media` |
 | `research` | `literature-review`, `user-research`, `market-research` |
 | `data-analysis` | `exploratory`, `dashboard`, `statistical` |
+| `build` | `clone`, `extend`, `improve`, `serverless-app`, `vercel`, `blockchain-web3`, `jekyll-site`, `html-css-js` |
 
 ### Step 2: Build the Messages
 
