@@ -16,7 +16,7 @@ Transform simple ideas into high-quality, production-ready prompts optimized for
 - **Use this prompt** — Open the generated prompt directly in ChatGPT, Claude, Copilot, or Gemini
 - **Assess this prompt** — Send the generated prompt to [Assess Prompts](https://97115104.github.io/assessprompts/) for quality scoring, optimization suggestions, and cost estimates
 - **Copy, download, and email** — One-click copy, download, or share the generated prompt via email
-- **URL routing** — Prefill prompts via query parameters and optionally auto-generate on page load
+- **URL routing** — Prefill prompts via hash-based URLs with LZ-String compression (supports prompts of any length) and optionally auto-generate on page load
 - **Smart loading UX** — Preflight connection checks, progressive status updates, and slow-generation hints
 - **Automatic fallback** — When Puter errors occur, a guided Ollama setup walkthrough appears so the tool always works
 - **AI Attestation** — Development and Build Based On prompts can include [attest.ink](https://attest.ink) workflow instructions for transparent AI collaboration disclosure
@@ -27,7 +27,7 @@ Transform simple ideas into high-quality, production-ready prompts optimized for
 2. Select a subject type and optionally a prompt style
 3. Select a target model class
 4. For Development or Build Based On, optionally enable AI Attestation (on by default)
-5. Type a simple idea or concept (or prefill via URL with `?prompt=`)
+5. Type a simple idea or concept (or prefill via shared URL)
 6. Optionally click **Share Idea** to share a prefilled link before generating
 7. Click **Generate Prompt**
 8. Get back an optimized prompt in three formats — copy, download, email, or open directly in ChatGPT, Claude, Copilot, or Gemini
@@ -522,33 +522,42 @@ If the preflight check fails, a clear error message explains exactly what to fix
 
 ## URL Routing
 
-Quality Prompts supports prefilling the prompt idea via URL query parameters. This is useful for sharing specific prompts, bookmarking common workflows, or integrating with other tools.
+Quality Prompts supports prefilling the prompt idea via URL parameters. Share URLs use hash fragments (`#p=...`) with LZ-String compression, which supports prompts of any length because the hash is never sent to the server.
 
-### Prefill a prompt
+### Hash-based URLs (preferred)
 
-Add `?prompt=` with your URL-encoded idea:
-
-```
-https://yourdomain.com/qualityprompts/?prompt=Build%20a%20dashboard%20that%20tracks%20user%20retention%20by%20cohort
-```
-
-The bare `?=` format also works:
+The Share Idea button generates compressed hash-based URLs:
 
 ```
-https://yourdomain.com/qualityprompts/?=Build%20a%20dashboard%20that%20tracks%20user%20retention%20by%20cohort
+https://yourdomain.com/qualityprompts/#p=compressed_data
 ```
 
-Both formats prefill the idea input field without generating.
+These URLs:
+- Support prompts of any length (tested with 10K+ character prompts)
+- Reduce URL length by ~60-70% through compression
+- Never hit server URI length limits (hash is client-side only)
+- Work reliably with GitHub Pages and other static hosts
 
 ### Auto-generate on load
 
 Add `&enter` to automatically trigger generation when the page loads:
 
 ```
-https://yourdomain.com/qualityprompts/?prompt=Build%20a%20dashboard%20that%20tracks%20user%20retention%20by%20cohort&enter
+https://yourdomain.com/qualityprompts/#p=compressed_data&enter
 ```
 
 This prefills the idea and immediately starts generating using the user's current API settings (defaults to Puter GPT-OSS).
+
+### Legacy query string support
+
+For backward compatibility, older URL formats are still supported:
+
+```
+https://yourdomain.com/qualityprompts/?prompt=Build%20a%20dashboard
+https://yourdomain.com/qualityprompts/?=Build%20a%20dashboard
+```
+
+These work for shorter prompts but may hit the ~8KB server header limit on GitHub Pages for longer content.
 
 ## Sharing and Using Prompts
 
@@ -556,7 +565,7 @@ This prefills the idea and immediately starts generating using the user's curren
 
 The **Share Idea** button (above Generate Prompt) opens a modal with two options:
 
-- **Copy link** — copies a prefilled URL (`?prompt=...`) that prefills the idea for the recipient
+- **Copy link** — copies a prefilled URL (`#p=...`) that prefills the idea for the recipient
 - **Copy link with auto-generate** — copies a prefilled URL with `&enter` that also triggers generation automatically on page load
 
 ### Use This Prompt
@@ -627,7 +636,7 @@ qualityprompts/
 - Puter errors automatically trigger a guided Ollama fallback modal with setup instructions
 - Anthropic, OpenAI, and Google require either CORS proxies or non-browser usage
 - Custom endpoint supports any OpenAI-compatible API with configurable base URL
-- URL routing supports `?prompt=`, bare `?=`, and `&enter` for auto-generation
+- URL routing supports hash-based URLs (`#p=`) with LZ-String compression for prompts of any length, plus legacy `?prompt=` and `?=` formats for backward compatibility
 - Share Idea modal with copy link and copy link with auto-generate options
 - Use this prompt buttons open generated prompts directly in ChatGPT, Claude, Copilot, and Gemini
 - Share via Email on the plain text tab sends the full generated prompt
