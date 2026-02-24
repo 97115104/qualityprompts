@@ -541,8 +541,8 @@ function updateSubTypeTooltip(subjectType) {
 <strong>Dashboard & Reporting</strong> — KPI dashboards with precise metric definitions, visualization choices, and interactivity specs.<br><br>
 <strong>Statistical Modeling</strong> — Regression, classification, hypothesis testing, model validation with assumption checking and reproducibility.`,
 
-        build: `<strong>General</strong> — Default dimensions for analyzing and recreating sites.<br><br>
-<strong>Clone</strong> — Recreate an existing site with the same look, feel, and functionality.<br><br>
+        build: `<strong>General</strong> — Default dimensions for analyzing and building inspired-by implementations.<br><br>
+<strong>Replicate</strong> — Build a new site inspired by an existing reference, learning from its design patterns.<br><br>
 <strong>Extend</strong> — Add new features while maintaining design consistency.<br><br>
 <strong>Improve</strong> — Analyze and implement fixes for design, performance, accessibility, or UX.<br><br>
 <strong>As Serverless</strong> — Create a serverless app based on the source (AWS, GCP, Azure, Cloudflare).<br><br>

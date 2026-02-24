@@ -110,11 +110,11 @@ Every subject type has specialized prompt styles that adapt the generated prompt
 
 ### Build Based On
 
-The Build Based On subject type requires entering a URL to analyze. All styles use the source URL as a reference for cloning, extending, improving, or creating new implementations with a specific tech stack.
+The Build Based On subject type requires entering a URL to analyze. All styles use the source URL as a design reference for building inspired-by implementations, extending, improving, or creating new implementations with a specific tech stack.
 
 | Style | Use When |
 |-------|----------|
-| Clone | Recreating an existing site with the same look, feel, and functionality. |
+| Replicate | Building a new site inspired by an existing reference, learning from its design patterns and functionality. |
 | Extend | Adding new features to an existing site while maintaining design consistency. |
 | Improve | Analyzing an existing site and generating improvement recommendations for design, performance, accessibility, or UX. |
 | As Serverless (Multi-Cloud) | Creating a multi-cloud serverless application based on an existing site. Choose your cloud provider (AWS, GCP, Azure, Cloudflare) and IaC tooling. |
@@ -136,7 +136,7 @@ Each subject type carries a `systemRole` field that tunes the system message for
 - **Marketing** — "specializing in marketing strategy, campaign planning, and audience engagement"
 - **Research** — "specializing in research methodology, analysis, and evidence-based inquiry"
 - **Data Analysis** — "specializing in data analysis, statistical methods, and data visualization"
-- **Build Based On** — "specializing in analyzing existing websites and generating specifications to recreate, extend, or improve them with specific technology stacks"
+- **Build Based On** — "specializing in analyzing existing websites and generating specifications to build inspired-by implementations, extend, or improve them with specific technology stacks"
 
 When a prompt style (sub-type) is selected, the system message also receives a `systemContext` block that further narrows the model's focus. For example, selecting "Diagnostic Prompt" under Development adds context about structuring debugging problems, while selecting "Photo Editing" under Design adds context about separating modifications from preservation. This two-layer approach (subject role + sub-type context) produces significantly better prompts than a one-size-fits-all system message.
 
@@ -238,7 +238,7 @@ Select one value from each category:
 | `marketing` | `campaign`, `content`, `social-media` |
 | `research` | `literature-review`, `user-research`, `market-research` |
 | `data-analysis` | `exploratory`, `dashboard`, `statistical` |
-| `build` | `clone`, `extend`, `improve`, `serverless-app`, `vercel`, `blockchain-web3`, `jekyll-site`, `html-css-js`, `toy-app` |
+| `build` | `replicate`, `extend`, `improve`, `serverless-app`, `vercel`, `blockchain-web3`, `jekyll-site`, `html-css-js`, `toy-app` |
 
 ### Step 2: Build the Messages
 

@@ -151,9 +151,9 @@ const PromptEngine = (() => {
             },
             buildBasedOn: {
                 labelPrefix: 'As ',
-                description: 'For creating a static site based on an existing site using only HTML, CSS, and JavaScript. The generated prompt should instruct the model to build working files based on the source.',
-                outputHints: 'Generate a prompt that instructs the model to BUILD complete HTML, CSS, and JS files based on the source URL. Analyze the source, then ask for working files that recreate it — not a specification.',
-                systemContext: 'The user wants to create a static site based on an existing website using only HTML, CSS, and JavaScript. The generated prompt must instruct the target model to produce complete, working files — not a specification. The files should work by opening index.html directly.',
+                description: 'For creating a static site inspired by an existing site using only HTML, CSS, and JavaScript. The generated prompt should instruct the model to build working files based on the source.',
+                outputHints: 'Generate a prompt that instructs the model to BUILD complete HTML, CSS, and JS files inspired by the source URL. Analyze the source for patterns, then ask for original working files — not a specification.',
+                systemContext: 'The user wants to create a static site inspired by an existing website using only HTML, CSS, and JavaScript. The generated prompt must instruct the target model to produce complete, working files — not a specification. The files should work by opening index.html directly.',
                 additionalDimensions: ['URL to analyze', 'Features from source site to preserve']
             }
         },
@@ -793,24 +793,24 @@ const PromptEngine = (() => {
             ],
             outputHints: 'Generate a prompt that instructs the model to BUILD a working implementation based on the source URL. Emphasize using JSON objects for configuration and data. The prompt should analyze the source, then ask for complete working code — not a specification.',
             subTypes: {
-                clone: {
-                    label: 'Clone',
-                    description: 'For recreating an existing site with the same look, feel, and functionality. The generated prompt should instruct the model to build a working clone.',
+                replicate: {
+                    label: 'Replicate',
+                    description: 'For building a new site inspired by an existing reference. Use the source as a design reference to create original implementation with similar patterns and functionality.',
                     requiresUrl: true,
                     dimensions: [
-                        'URL to analyze',
-                        'Visual fidelity requirements (pixel-perfect vs inspired-by)',
-                        'Layout and responsive behavior to match',
-                        'Color palette, typography, and spacing extraction',
-                        'Interactive elements and their behavior',
-                        'Content structure and hierarchy',
-                        'Assets to recreate vs source from original',
+                        'URL to analyze as reference',
+                        'Design patterns and layout concepts to learn from',
+                        'Layout and responsive behavior to implement',
+                        'Color palette, typography, and spacing inspiration',
+                        'Interactive patterns and their behavior',
+                        'Content structure and hierarchy patterns',
+                        'Original assets to create (not copied from source)',
                         'Target tech stack selection',
                         'Deployment target (GitHub Pages, Vercel, etc.)',
-                        'Legal and ethical considerations'
+                        'Original content requirements'
                     ],
-                    outputHints: 'Generate a prompt that instructs the model to BUILD a working clone of the source site. Include analysis guidance, then ask for complete working code files that recreate the site.',
-                    systemContext: 'The user wants to recreate an existing website. The generated prompt must instruct the target model to produce working code that clones the source site — not a specification. The prompt should guide analysis of the source, then ask for complete implementation files.'
+                    outputHints: 'Generate a prompt that instructs the model to BUILD an original implementation inspired by the source site. Analyze the reference for patterns and design language, then create new working code that captures the essence without copying.',
+                    systemContext: 'The user wants to build a new site inspired by an existing reference. The generated prompt must instruct the target model to analyze the source for design patterns and create original working code — not copy the source. Emphasize learning from the reference to build something new.'
                 },
                 extend: {
                     label: 'Extend',
