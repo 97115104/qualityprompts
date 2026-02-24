@@ -522,7 +522,22 @@ If the preflight check fails, a clear error message explains exactly what to fix
 
 ## URL Routing
 
-Quality Prompts supports prefilling the prompt idea via URL parameters. Share URLs use hash fragments (`#p=...`) with LZ-String compression, which supports prompts of any length because the hash is never sent to the server.
+Quality Prompts supports prefilling the prompt idea and all configuration settings via URL parameters. Share URLs use hash fragments (`#p=...`) with LZ-String compression, which supports prompts of any length because the hash is never sent to the server.
+
+### How to Share a Prompt Configuration
+
+1. Fill in your idea and select your preferred settings (subject type, prompt style, target model, attestation)
+2. Click **Share Idea** above the Generate button
+3. Choose **Copy link** or **Copy link with auto-generate**
+4. Send the link — recipients will see your exact configuration
+
+The shared URL preserves:
+- The prompt/idea text
+- Subject type (Development, Writing, Build Based On, etc.)
+- Prompt style (Specification, Diagnostic, Replicate, etc.)
+- Target model class (Frontier, LLM, SLM, etc.)
+- AI attestation preference (Yes/No)
+- Build URL (for Build Based On subject type)
 
 ### Hash-based URLs (preferred)
 
@@ -551,6 +566,23 @@ Share URLs include all configuration settings so recipients get the exact same s
 | `a` | AI attestation preference | `yes`, `no` |
 | `u` | Compressed build URL (for Build Based On) | `N4IgLg...` |
 | `enter` | Auto-generate on load (flag, no value) | — |
+
+### Example URLs
+
+**Share a Development specification prompt for Frontier models:**
+```
+https://97115104.github.io/qualityprompts/#p=...&s=development&st=specification&m=frontier&a=yes
+```
+
+**Share a Build Based On prompt with a reference URL:**
+```
+https://97115104.github.io/qualityprompts/#p=...&s=build&st=replicate&m=frontier&a=yes&u=...
+```
+
+**Share and auto-generate immediately:**
+```
+https://97115104.github.io/qualityprompts/#p=...&s=development&st=html-css-js&m=llm&a=yes&enter
+```
 
 ### Auto-generate on load
 
