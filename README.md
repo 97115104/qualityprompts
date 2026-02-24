@@ -16,7 +16,7 @@ Transform simple ideas into high-quality, production-ready prompts optimized for
 - **Use this prompt** — Open the generated prompt directly in ChatGPT, Claude, Copilot, or Gemini
 - **Assess this prompt** — Send the generated prompt to [Assess Prompts](https://97115104.github.io/assessprompts/) for quality scoring, optimization suggestions, and cost estimates
 - **Copy, download, and email** — One-click copy, download, or share the generated prompt via email
-- **URL routing** — Prefill prompts via hash-based URLs with LZ-String compression (supports prompts of any length) and optionally auto-generate on page load
+- **URL routing** — Share URLs include all settings (subject type, prompt style, target model, attestation) with LZ-String compression, supporting prompts of any length
 - **Smart loading UX** — Preflight connection checks, progressive status updates, and slow-generation hints
 - **Automatic fallback** — When Puter errors occur, a guided Ollama setup walkthrough appears so the tool always works
 - **AI Attestation** — Development and Build Based On prompts can include [attest.ink](https://attest.ink) workflow instructions for transparent AI collaboration disclosure
@@ -538,15 +538,29 @@ These URLs:
 - Never hit server URI length limits (hash is client-side only)
 - Work reliably with GitHub Pages and other static hosts
 
+### URL Parameters
+
+Share URLs include all configuration settings so recipients get the exact same setup:
+
+| Parameter | Description | Example Values |
+|-----------|-------------|----------------|
+| `p` | Compressed prompt/idea (LZ-String) | `N4IgLg...` |
+| `s` | Subject type | `development`, `writing`, `build` |
+| `st` | Prompt style (sub-type) | `specification`, `diagnostic`, `replicate` |
+| `m` | Target model class | `frontier`, `llm`, `slm`, `paid`, `open-source` |
+| `a` | AI attestation preference | `yes`, `no` |
+| `u` | Compressed build URL (for Build Based On) | `N4IgLg...` |
+| `enter` | Auto-generate on load (flag, no value) | — |
+
 ### Auto-generate on load
 
 Add `&enter` to automatically trigger generation when the page loads:
 
 ```
-https://yourdomain.com/qualityprompts/#p=compressed_data&enter
+https://yourdomain.com/qualityprompts/#p=compressed_data&s=development&st=specification&m=frontier&a=yes&enter
 ```
 
-This prefills the idea and immediately starts generating using the user's current API settings (defaults to Puter GPT-OSS).
+This prefills all settings and immediately starts generating using the user's current API provider (defaults to Puter GPT-OSS).
 
 ### Legacy query string support
 
@@ -565,8 +579,8 @@ These work for shorter prompts but may hit the ~8KB server header limit on GitHu
 
 The **Share Idea** button (above Generate Prompt) opens a modal with two options:
 
-- **Copy link** — copies a prefilled URL (`#p=...`) that prefills the idea for the recipient
-- **Copy link with auto-generate** — copies a prefilled URL with `&enter` that also triggers generation automatically on page load
+- **Copy link** — copies a prefilled URL with all current settings (subject type, prompt style, target model, attestation)
+- **Copy link with auto-generate** — same as above, plus `&enter` to trigger generation automatically on page load
 
 ### Use This Prompt
 
@@ -636,7 +650,7 @@ qualityprompts/
 - Puter errors automatically trigger a guided Ollama fallback modal with setup instructions
 - Anthropic, OpenAI, and Google require either CORS proxies or non-browser usage
 - Custom endpoint supports any OpenAI-compatible API with configurable base URL
-- URL routing supports hash-based URLs (`#p=`) with LZ-String compression for prompts of any length, plus legacy `?prompt=` and `?=` formats for backward compatibility
+- URL routing supports hash-based URLs (`#p=`) with LZ-String compression, including all settings (subject type `s`, prompt style `st`, target model `m`, attestation `a`, build URL `u`) plus legacy `?prompt=` and `?=` formats for backward compatibility
 - Share Idea modal with copy link and copy link with auto-generate options
 - Use this prompt buttons open generated prompts directly in ChatGPT, Claude, Copilot, and Gemini
 - Share via Email on the plain text tab sends the full generated prompt

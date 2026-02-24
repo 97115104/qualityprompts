@@ -152,6 +152,11 @@ document.addEventListener('DOMContentLoaded', () => {
 function handleUrlRouting() {
     let prompt = null;
     let hasEnter = false;
+    let subjectType = null;
+    let subType = null;
+    let modelType = null;
+    let attestation = null;
+    let buildUrl = null;
 
     // First, check URL hash (preferred - not sent to server, no length limit)
     const hash = window.location.hash;
@@ -172,6 +177,25 @@ function handleUrlRouting() {
         // Fall back to uncompressed prompt in hash
         if (!prompt) {
             prompt = hashParams.get('prompt');
+        }
+        
+        // Get additional parameters from hash
+        subjectType = hashParams.get('s');
+        subType = hashParams.get('st');
+        modelType = hashParams.get('m');
+        attestation = hashParams.get('a');
+        
+        // Build URL - try compressed first
+        const compressedBuildUrl = hashParams.get('u');
+        if (compressedBuildUrl && typeof LZString !== 'undefined') {
+            try {
+                buildUrl = LZString.decompressFromEncodedURIComponent(compressedBuildUrl);
+            } catch (e) {
+                console.warn('Failed to decompress build URL from hash:', e);
+            }
+        }
+        if (!buildUrl) {
+            buildUrl = hashParams.get('url');
         }
         
         // Check for enter flag in hash
@@ -206,6 +230,13 @@ function handleUrlRouting() {
             }
         }
         
+        // Get additional parameters from query string if not already set from hash
+        if (!subjectType) subjectType = params.get('s');
+        if (!subType) subType = params.get('st');
+        if (!modelType) modelType = params.get('m');
+        if (!attestation) attestation = params.get('a');
+        if (!buildUrl) buildUrl = params.get('url');
+        
         // Check for enter flag in query string
         if (!hasEnter) {
             const autoEnter = params.get('enter');
@@ -214,16 +245,60 @@ function handleUrlRouting() {
         }
     }
 
-    if (!prompt) return;
+    // Apply subject type first (triggers sub-type dropdown population)
+    if (subjectType) {
+        const subjectSelect = document.getElementById('subject-type');
+        if (subjectSelect && Array.from(subjectSelect.options).some(o => o.value === subjectType)) {
+            subjectSelect.value = subjectType;
+            updateSubTypeDropdown();
+            updateBuildUrlField();
+            updateAttestationDropdown();
+        }
+    }
+    
+    // Apply sub-type (must come after subject type)
+    if (subType) {
+        const subTypeSelect = document.getElementById('sub-type');
+        if (subTypeSelect && Array.from(subTypeSelect.options).some(o => o.value === subType)) {
+            subTypeSelect.value = subType;
+            updateBuildUrlField();
+        }
+    }
+    
+    // Apply model type
+    if (modelType) {
+        const modelSelect = document.getElementById('model-type');
+        if (modelSelect && Array.from(modelSelect.options).some(o => o.value === modelType)) {
+            modelSelect.value = modelType;
+        }
+    }
+    
+    // Apply attestation preference
+    if (attestation) {
+        const attestSelect = document.getElementById('attestation');
+        if (attestSelect && Array.from(attestSelect.options).some(o => o.value === attestation)) {
+            attestSelect.value = attestation;
+        }
+    }
+    
+    // Apply build URL
+    if (buildUrl) {
+        const buildUrlInput = document.getElementById('build-url');
+        if (buildUrlInput) {
+            buildUrlInput.value = buildUrl;
+        }
+    }
 
     // Prefill the idea input
-    const ideaInput = document.getElementById('idea-input');
-    ideaInput.value = prompt;
-    // Update char counter
-    const charCount = document.getElementById('char-count');
-    charCount.textContent = prompt.length.toLocaleString();
+    if (prompt) {
+        const ideaInput = document.getElementById('idea-input');
+        ideaInput.value = prompt;
+        const charCount = document.getElementById('char-count');
+        charCount.textContent = prompt.length.toLocaleString();
+    }
 
-    if (hasEnter) {
+    // Only auto-generate if we have a prompt
+    if (prompt && hasEnter) {
         // Small delay to let Puter SDK initialize
         setTimeout(() => handleGenerate(), 500);
     }
@@ -257,6 +332,12 @@ function setupShareIdeaButton() {
 
     function buildShareUrl(includeEnter) {
         const idea = document.getElementById('idea-input').value.trim();
+        const subjectType = document.getElementById('subject-type').value;
+        const subType = document.getElementById('sub-type').value;
+        const modelType = document.getElementById('model-type').value;
+        const attestation = document.getElementById('attestation').value;
+        const buildUrlValue = document.getElementById('build-url').value.trim();
+        
         const base = window.location.origin + window.location.pathname;
         
         // Use hash fragment (#) instead of query string (?)
@@ -264,12 +345,28 @@ function setupShareIdeaButton() {
         if (typeof LZString !== 'undefined') {
             const compressedIdea = LZString.compressToEncodedURIComponent(idea);
             let hash = 'p=' + compressedIdea;
+            
+            // Add configuration parameters
+            if (subjectType) hash += '&s=' + encodeURIComponent(subjectType);
+            if (subType) hash += '&st=' + encodeURIComponent(subType);
+            if (modelType) hash += '&m=' + encodeURIComponent(modelType);
+            if (attestation) hash += '&a=' + encodeURIComponent(attestation);
+            if (buildUrlValue) {
+                const compressedBuildUrl = LZString.compressToEncodedURIComponent(buildUrlValue);
+                hash += '&u=' + compressedBuildUrl;
+            }
+            
             if (includeEnter) hash += '&enter';
             return base + '#' + hash;
         }
         
         // Fallback if LZString not loaded - still use hash
         let hash = 'prompt=' + encodeURIComponent(idea);
+        if (subjectType) hash += '&s=' + encodeURIComponent(subjectType);
+        if (subType) hash += '&st=' + encodeURIComponent(subType);
+        if (modelType) hash += '&m=' + encodeURIComponent(modelType);
+        if (attestation) hash += '&a=' + encodeURIComponent(attestation);
+        if (buildUrlValue) hash += '&url=' + encodeURIComponent(buildUrlValue);
         if (includeEnter) hash += '&enter';
         return base + '#' + hash;
     }
