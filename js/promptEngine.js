@@ -812,6 +812,19 @@ const PromptEngine = (() => {
                     outputHints: 'Generate a prompt that instructs the model to BUILD an original implementation inspired by the source site. Analyze the reference for patterns and design language, then create new working code that captures the essence without copying.',
                     systemContext: 'The user wants to build a new site inspired by an existing reference. The generated prompt must instruct the target model to analyze the source for design patterns and create original working code — not copy the source. Emphasize learning from the reference to build something new.'
                 },
+                implementation: {
+                    label: 'Implementation',
+                    description: 'For building a direct implementation based on the analyzed source or idea. Use when you want a simple, straightforward, and easily repeatable implementation.',
+                    requiresUrl: false,
+                    dimensions: [
+                        'Core idea or feature to implement',
+                        'Simplicity and repeatability requirements',
+                        'Minimal steps to achieve the goal',
+                        'No unnecessary complexity'
+                    ],
+                    outputHints: 'Generate a prompt that instructs the model to BUILD a simple, straightforward, and easily repeatable implementation of the idea or analyzed source.',
+                    systemContext: 'The user wants a direct, minimal implementation. The generated prompt must instruct the target model to focus on simplicity, repeatability, and clarity, avoiding unnecessary complexity.'
+                },
                 extend: {
                     label: 'Extend',
                     description: 'For adding new features or sections to an existing site while maintaining design consistency. The generated prompt should instruct the model to build the new additions.',

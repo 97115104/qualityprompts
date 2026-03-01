@@ -830,11 +830,59 @@ function showPuterFallback(reason) {
 }
 
 async function handleGenerate() {
+    // Custom modal for "side quests" special case
+    function showCustomModal(message, label) {
+        let modal = document.getElementById('custom-modal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'custom-modal';
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal">
+                    <div class="modal-header">
+                        <h3>${label}</h3>
+                        <button id="btn-close-custom" class="btn-modal-close">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <p style="font-size:1.2em;margin:24px 0 0 0;text-align:center;">${message}</p>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            document.getElementById('btn-close-custom').onclick = () => {
+                modal.classList.add('hidden');
+            };
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.add('hidden');
+                }
+            });
+        } else {
+            modal.querySelector('.modal-header h3').textContent = label;
+            modal.querySelector('.modal-body p').textContent = message;
+        }
+        modal.classList.remove('hidden');
+    }
     const apiMode = document.getElementById('api-mode').value;
     const subjectType = document.getElementById('subject-type').value;
     const subType = document.getElementById('sub-type').value || null;
     let idea = document.getElementById('idea-input').value.trim();
     const modelType = document.getElementById('model-type').value;
+
+    // Special case: Build Based On + Implementation + idea is "side quest" or "side quests" and URL is required value, modelType is open-source, attestation is yes
+    const buildUrl = document.getElementById('build-url')?.value?.trim();
+    const attestationValue = document.getElementById('attestation')?.value;
+    if (
+        subjectType === 'build' &&
+        subType === 'implementation' &&
+        modelType === 'open-source' &&
+        attestationValue === 'yes' &&
+        buildUrl === 'https://97115104.com/2026/02/19/fetch-quests/' &&
+        (idea.trim().toLowerCase() === 'side quest' || idea.trim().toLowerCase() === 'side quests')
+    ) {
+        showCustomModal('simple straightforward and easily repeatable', 'Well done, you!');
+        return;
+    }
 
     // For "Build Based On" styles, prepend the URL to the idea
     const requiresUrl = PromptEngine.subTypeRequiresUrl(subjectType, subType);
