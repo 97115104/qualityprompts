@@ -880,7 +880,7 @@ async function handleGenerate() {
         buildUrl === 'https://97115104.com/2026/02/19/fetch-quests/' &&
         (idea.trim().toLowerCase() === 'side quest' || idea.trim().toLowerCase() === 'side quests')
     ) {
-        showCustomModal('simple straightforward and easily repeatable', 'Well done, you!');
+        showCustomModal('simple straightforward repeatable', 'Well done, you!');
         return;
     }
 
